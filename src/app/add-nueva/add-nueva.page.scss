@@ -1,0 +1,288 @@
+ion-content {
+  --background: #f5f5f5;
+}
+
+ion-toolbar {
+  --background: #252261;
+  --color: white;
+}
+
+.step-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .file-info-chip {
+    background: #252261;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    flex: 1;
+    text-align: center;
+  }
+}
+
+ion-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+
+  .card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+
+    ion-card-title {
+      color: #252261;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+}
+
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 16px;
+
+  ion-label {
+    font-weight: 600;
+    color: #252261;
+    margin-bottom: 8px;
+  }
+
+  ion-input,
+  ion-select {
+    --padding-start: 12px;
+    --padding-end: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 4px;
+  }
+}
+
+.submit-btn {
+  margin-top: 24px;
+  --background: #252261;
+  height: 48px;
+  font-weight: 600;
+}
+
+// Stores Management
+.stores-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .store-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #e8e8f5;
+    color: #252261;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+
+    ion-icon {
+      font-size: 20px;
+      cursor: pointer;
+      color: #ff4444;
+
+      &:hover {
+        color: #cc0000;
+      }
+    }
+  }
+}
+
+// Price Table
+.price-table-card {
+  overflow: visible;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin: -16px;
+  padding: 16px;
+}
+
+.price-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 600px;
+
+  thead {
+    background: #252261;
+    color: white;
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid #3d3a8f;
+
+      &.product-column {
+        min-width: 200px;
+        position: sticky;
+        left: 0;
+        background: #252261;
+        z-index: 2;
+      }
+
+      &.store-column {
+        min-width: 150px;
+        text-align: center;
+      }
+
+      &.action-column {
+        width: 80px;
+        text-align: center;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      &:nth-child(even) {
+        background: #f9f9f9;
+      }
+
+      &:hover {
+        background: #f0f0f0;
+      }
+
+      td {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+
+        &.product-name {
+          font-weight: 600;
+          color: #333;
+          position: sticky;
+          left: 0;
+          background: inherit;
+          z-index: 1;
+        }
+
+        &.price-cell {
+          text-align: center;
+
+          .price-input {
+            --padding-start: 8px;
+            --padding-end: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: right;
+            font-size: 14px;
+            height: 36px;
+
+            &:focus {
+              border-color: #252261;
+            }
+          }
+        }
+
+        &.action-cell {
+          text-align: center;
+
+          ion-icon {
+            font-size: 20px;
+            cursor: pointer;
+
+            &:hover {
+              opacity: 0.7;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.add-category-btn {
+  margin: 20px 0;
+  --border-color: #252261;
+  --color: #252261;
+  height: 44px;
+}
+
+.submit-final-btn {
+  margin: 20px 0 40px 0;
+  height: 52px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .step-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    ion-button {
+      width: 100%;
+    }
+
+    .file-info-chip {
+      text-align: center;
+    }
+  }
+
+  .card-header-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+
+    ion-button {
+      width: 100%;
+    }
+  }
+
+  .price-table {
+    font-size: 13px;
+
+    thead th {
+      padding: 8px;
+      font-size: 12px;
+
+      &.product-column {
+        min-width: 150px;
+      }
+
+      &.store-column {
+        min-width: 120px;
+      }
+    }
+
+    tbody td {
+      padding: 6px 8px;
+
+      .price-input {
+        font-size: 13px;
+        height: 32px;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .stores-list {
+    flex-direction: column;
+
+    .store-chip {
+      justify-content: space-between;
+    }
+  }
+}

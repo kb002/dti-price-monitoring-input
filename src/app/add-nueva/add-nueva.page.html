@@ -1,0 +1,195 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/nueva"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Add New File - Nueva Vizcaya</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Step 1: File Information -->
+  <div *ngIf="currentStep === 1" class="step-container">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>File Information</ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <!-- File Name -->
+        <ion-item>
+          <ion-label position="stacked">File Name *</ion-label>
+          <ion-input 
+            [(ngModel)]="fileName" 
+            placeholder="Enter file name"
+            type="text">
+          </ion-input>
+        </ion-item>
+
+        <!-- Commodity Selection -->
+        <ion-item>
+          <ion-label position="stacked">Commodity *</ion-label>
+          <ion-select 
+            [(ngModel)]="commodity" 
+            placeholder="Select commodity"
+            interface="popover">
+            <ion-select-option value="bnpc">BNPC (Basic Necessities and Prime Commodities)</ion-select-option>
+            <ion-select-option value="construction_materials">Construction Materials</ion-select-option>
+            <ion-select-option value="flour">Flour</ion-select-option>
+            <ion-select-option value="others">Others</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Custom Commodity (if Others selected) -->
+        <ion-item *ngIf="commodity === 'others'">
+          <ion-label position="stacked">Commodity Type *</ion-label>
+          <ion-input 
+            [(ngModel)]="customCommodity" 
+            placeholder="Enter commodity type"
+            type="text">
+          </ion-input>
+        </ion-item>
+
+        <!-- Month Selection -->
+        <ion-item>
+          <ion-label position="stacked">Month *</ion-label>
+          <ion-select 
+            [(ngModel)]="month" 
+            placeholder="Select month"
+            interface="popover">
+            <ion-select-option *ngFor="let m of months" [value]="m">{{ m }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Week Selection -->
+        <ion-item>
+          <ion-label position="stacked">Week *</ion-label>
+          <ion-select 
+            [(ngModel)]="week" 
+            placeholder="Select week"
+            interface="popover">
+            <ion-select-option *ngFor="let w of weeks" [value]="w">{{ w }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-button 
+          expand="block" 
+          (click)="submitFileInfo()"
+          class="submit-btn">
+          Next: Fill Price Data
+          <ion-icon slot="end" name="arrow-forward"></ion-icon>
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Step 2: Price Data Entry -->
+  <div *ngIf="currentStep === 2" class="step-container">
+    <div class="step-header">
+      <ion-button fill="outline" (click)="backToFileInfo()">
+        <ion-icon slot="start" name="arrow-back"></ion-icon>
+        Back to File Info
+      </ion-button>
+      
+      <div class="file-info-chip">
+        <strong>{{ fileName }}</strong> - {{ commodity === 'others' ? customCommodity : commodity }} - {{ month }} {{ week }}
+      </div>
+    </div>
+
+    <!-- Store Management -->
+    <ion-card>
+      <ion-card-header>
+        <div class="card-header-flex">
+          <ion-card-title>Stores</ion-card-title>
+          <ion-button size="small" (click)="addStore()">
+            <ion-icon slot="start" name="add"></ion-icon>
+            Add Store
+          </ion-button>
+        </div>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <div class="stores-list">
+          <div *ngFor="let store of stores; let i = index" class="store-chip">
+            <span>{{ store }}</span>
+            <ion-icon 
+              name="close-circle" 
+              (click)="removeStore(i)"
+              *ngIf="stores.length > 1">
+            </ion-icon>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Price Table -->
+    <ion-card *ngFor="let category of categories; let catIndex = index" class="price-table-card">
+      <ion-card-header>
+        <div class="card-header-flex">
+          <ion-card-title>{{ category.name }}</ion-card-title>
+          <ion-button size="small" (click)="addProduct(catIndex)">
+            <ion-icon slot="start" name="add"></ion-icon>
+            Add Product
+          </ion-button>
+        </div>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th class="product-column">Product Name</th>
+                <th *ngFor="let store of stores; let storeIndex = index" class="store-column">
+                  {{ store }}
+                </th>
+                <th class="action-column">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let product of category.products; let prodIndex = index">
+                <td class="product-name">{{ product.name }}</td>
+                <td *ngFor="let store of stores; let storeIndex = index" class="price-cell">
+                  <ion-input
+                    type="number"
+                    [value]="product.prices[storeIndex] || ''"
+                    (ionInput)="updatePrice(product, storeIndex, $event)"
+                    placeholder="0.00"
+                    class="price-input">
+                  </ion-input>
+                </td>
+                <td class="action-cell">
+                  <ion-icon 
+                    name="trash-outline" 
+                    color="danger"
+                    (click)="removeProduct(catIndex, prodIndex)">
+                  </ion-icon>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Add Category Button -->
+    <ion-button 
+      expand="block" 
+      fill="outline" 
+      (click)="addCategory()"
+      class="add-category-btn">
+      <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+      Add New Category
+    </ion-button>
+
+    <!-- Submit Button -->
+    <ion-button 
+      expand="block" 
+      color="success" 
+      (click)="submitForm()"
+      class="submit-final-btn">
+      <ion-icon slot="start" name="save-outline"></ion-icon>
+      Save File
+    </ion-button>
+  </div>
+</ion-content>

@@ -1,0 +1,65 @@
+<ion-content class="ion-padding">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="user-info">
+      <h1>Nueva Vizcaya</h1>
+      <p class="email">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        {{ userEmail }}
+      </p>
+    </div>
+    <ion-button color="danger" (click)="confirmLogout()">
+      <ion-icon slot="start" name="log-out-outline"></ion-icon>
+      Logout
+    </ion-button>
+  </div>
+
+  <!-- Files Card -->
+  <ion-card>
+    <ion-card-header>
+      <div class="card-header-flex">
+        <ion-card-title>Files</ion-card-title>
+        <ion-button (click)="generateNewFile()">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Generate New File
+        </ion-button>
+      </div>
+    </ion-card-header>
+    
+    <ion-card-content>
+      <ion-list *ngIf="!loading && files.length > 0">
+        <ion-item *ngFor="let file of files" lines="full" class="file-item">
+          <ion-label>
+            <h2 class="file-name">{{ file.fileName }}</h2>
+            <p class="file-meta">
+              <span class="owner">
+                <ion-icon name="person-outline"></ion-icon>
+                {{ file.uploadedByEmail }}
+              </span>
+              <span class="date">
+                <ion-icon name="calendar-outline"></ion-icon>
+                {{ formatDate(file.uploadedAt) }}
+              </span>
+            </p>
+          </ion-label>
+          <ion-icon 
+            slot="end" 
+            name="ellipsis-vertical" 
+            class="options-icon"
+            (click)="openFileOptions(file)">
+          </ion-icon>
+        </ion-item>
+      </ion-list>
+
+      <div *ngIf="!loading && files.length === 0" class="empty-state">
+        <ion-icon name="folder-open-outline"></ion-icon>
+        <p>No files yet</p>
+      </div>
+
+      <div *ngIf="loading" class="loading-state">
+        <ion-icon name="hourglass-outline"></ion-icon>
+        <p>Loading files...</p>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

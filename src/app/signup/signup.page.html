@@ -1,0 +1,89 @@
+<ion-content class="signup-content" [fullscreen]="true">
+  <div class="page-wrapper">
+
+    <!-- Header Logos -->
+    <div class="header">
+      <div class="logo-circle">
+        <img src="assets/dti-logo.png" alt="DTI Logo" />
+      </div>
+      <div class="logo-circle1">
+        <img src="assets/bp-logo.png" alt="BP Logo" />
+      </div>
+    </div>
+
+    <!-- Department Text -->
+    <h2 class="department">
+      DEPARTMENT OF TRADE AND INDUSTRY<br />
+      <span>REGION II</span><br />
+      <small class="division">Consumer Protection Division</small>
+    </h2>
+
+    <!-- Signup Card -->
+    <div class="signup-box">
+      <h3>CREATE AN ACCOUNT</h3>
+
+      <!-- Province -->
+      <div class="form-group">
+        <label>Province</label>
+        <ion-item lines="none" class="field">
+          <ion-select 
+            [(ngModel)]="province" 
+            placeholder="Select province"
+            interface="alert"
+            [interfaceOptions]="{
+              header: 'Select Province'
+            }">
+            <ion-select-option value="cagayan">Cagayan</ion-select-option>
+            <ion-select-option value="isabela">Isabela</ion-select-option>
+            <ion-select-option value="nueva_vizcaya">Nueva Vizcaya</ion-select-option>
+            <ion-select-option value="quirino">Quirino</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label>Email</label>
+        <ion-item lines="none" class="field">
+          <ion-input
+            [(ngModel)]="email"
+            type="email"
+            placeholder="Enter your email">
+          </ion-input>
+        </ion-item>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label>Password</label>
+        <ion-item lines="none" class="field">
+          <ion-input
+            [(ngModel)]="password"
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Enter your password">
+          </ion-input>
+
+          <ion-icon
+            slot="end"
+            class="eye"
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+            (click)="togglePassword()">
+          </ion-icon>
+        </ion-item>
+      </div>
+
+      <ion-button expand="block" (click)="signup()" [disabled]="loading">
+        {{ loading ? 'SIGNING UP...' : 'SIGN UP' }}
+      </ion-button>
+
+      <ion-text color="danger" *ngIf="error">{{ error }}</ion-text>
+      <ion-text color="success" *ngIf="success">{{ success }}</ion-text>
+
+      <!-- Login Link -->
+      <p class="login-link">
+        Already have an account? <span (click)="goToLogin()">Log in</span>
+      </p>
+    </div>
+
+  </div>
+</ion-content>

@@ -1,0 +1,40 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Cagayan Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="welcome-section">
+    <h1>Welcome to Cagayan</h1>
+    <p class="user-info">
+      <ion-icon name="person-circle-outline"></ion-icon>
+      {{ userEmail }}
+    </p>
+  </div>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Province Information</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Province:</strong> {{ provinceName }}</p>
+      <p><strong>Region:</strong> Region II - Cagayan Valley</p>
+      <p><strong>Status:</strong> Active</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Quick Actions</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>This is your Cagayan-specific dashboard. You can add province-specific features here.</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button expand="block" color="danger" (click)="confirmLogout()">
+    <ion-icon slot="start" name="log-out-outline"></ion-icon>
+    Logout
+  </ion-button>
+</ion-content>
