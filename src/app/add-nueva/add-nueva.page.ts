@@ -24,7 +24,16 @@ import {
   LoadingController,
   ToastController
 } from '@ionic/angular/standalone';
-import { Firestore, collection, addDoc, Timestamp } from '@angular/fire/firestore';
+import { 
+  Firestore, 
+  collection, 
+  addDoc, 
+  doc, 
+  getDoc,
+  getDocs,
+  setDoc,
+  Timestamp 
+} from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 
 interface Product {
@@ -37,6 +46,13 @@ interface ProductCategory {
   id: string;
   name: string;
   products: Product[];
+}
+
+interface CommodityTemplate {
+  id: string;
+  name: string;
+  displayName: string;
+  categories: ProductCategory[];
 }
 
 @Component({
@@ -77,56 +93,13 @@ export class AddNuevaPage implements OnInit {
   // Step tracking
   currentStep: number = 1;
 
-  // Store columns
-  stores: string[] = ['Store 1', 'Store 2', 'Store 3'];
+  // Province identifier
+  province: string = 'nueva_vizcaya';
 
-  // Product data based on commodity
+  // Dynamic data from database
+  stores: string[] = [];
+  commodities: CommodityTemplate[] = [];
   categories: ProductCategory[] = [];
-
-  // Predefined products for each commodity type
-  commodityTemplates: { [key: string]: ProductCategory[] } = {
-    'bnpc': [
-      {
-        id: 'bottled-water',
-        name: 'Bottled Water',
-        products: [
-          { id: 'wilkins', name: 'Wilkins', prices: {} }
-        ]
-      },
-      {
-        id: 'canned-goods',
-        name: 'Canned Goods',
-        products: [
-          { id: 'sardines', name: 'Sardines', prices: {} }
-        ]
-      }
-    ],
-    'construction_materials': [
-      {
-        id: 'cement',
-        name: 'Cement',
-        products: [
-          { id: 'portland', name: 'Portland Cement', prices: {} }
-        ]
-      },
-      {
-        id: 'steel',
-        name: 'Steel',
-        products: [
-          { id: 'rebar', name: 'Rebar', prices: {} }
-        ]
-      }
-    ],
-    'flour': [
-      {
-        id: 'wheat-flour',
-        name: 'Wheat Flour',
-        products: [
-          { id: 'all-purpose', name: 'All Purpose Flour', prices: {} }
-        ]
-      }
-    ]
-  };
 
   months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -144,12 +117,11 @@ export class AddNuevaPage implements OnInit {
     private toastController: ToastController
   ) {}
 
-  ngOnInit() {
-    // Check authentication status on page load
+  async ngOnInit() {
     this.checkAuthStatus();
+    await this.loadProvinceData();
   }
 
-  // Check if user is authenticated
   checkAuthStatus() {
     const currentUser = this.auth.currentUser;
     if (!currentUser) {
@@ -158,7 +130,146 @@ export class AddNuevaPage implements OnInit {
     }
   }
 
-  // Step 1: Submit file info
+  // Load province data from nested structure
+  async loadProvinceData() {
+    const loading = await this.loadingController.create({
+      message: 'Loading data...',
+    });
+    await loading.present();
+
+    try {
+      // Load stores from stores subcollection
+      await this.loadStores();
+      
+      // Load commodities
+      await this.loadCommodities();
+      
+      console.log('Loaded stores:', this.stores);
+      console.log('Loaded commodities:', this.commodities);
+      
+    } catch (error) {
+      console.error('Error loading province data:', error);
+      this.showToast('Error loading data: ' + error, 'danger');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  // Load stores from stores subcollection
+  async loadStores() {
+    try {
+      const storesRef = collection(this.firestore, `provinces/${this.province}/stores`);
+      const storesSnap = await getDocs(storesRef);
+      
+      this.stores = [];
+      
+      storesSnap.forEach((storeDoc) => {
+        const storeData = storeDoc.data();
+        this.stores.push(storeData['name'] || storeDoc.id);
+      });
+      
+      // If no stores found, you might want to create default ones
+      if (this.stores.length === 0) {
+        console.warn('No stores found in database. Please add stores manually in Firestore.');
+        this.showToast('No stores found. Please add stores in Firestore.', 'warning');
+      }
+      
+      console.log('Stores loaded:', this.stores);
+    } catch (error) {
+      console.error('Error loading stores:', error);
+      throw error;
+    }
+  }
+
+  // Load commodities from subcollection
+  async loadCommodities() {
+    try {
+      const commoditiesRef = collection(this.firestore, `provinces/${this.province}/commodities`);
+      const commoditiesSnap = await getDocs(commoditiesRef);
+      
+      this.commodities = [];
+      
+      for (const commodityDoc of commoditiesSnap.docs) {
+        const commodityData = commodityDoc.data();
+        const commodityId = commodityDoc.id;
+        
+        // Load categories for this commodity
+        const categories = await this.loadCategories(commodityId);
+        
+        this.commodities.push({
+          id: commodityId,
+          name: commodityData['name'] || commodityId,
+          displayName: commodityData['displayName'] || commodityId,
+          categories: categories
+        });
+      }
+      
+      // If no commodities found
+      if (this.commodities.length === 0) {
+        console.warn('No commodities found in database. Please add commodities manually in Firestore.');
+        this.showToast('No commodities found. Please add commodities in Firestore.', 'warning');
+      }
+      
+      console.log('Commodities loaded:', this.commodities);
+    } catch (error) {
+      console.error('Error loading commodities:', error);
+      throw error;
+    }
+  }
+
+  // Load categories for a commodity
+  async loadCategories(commodityId: string): Promise<ProductCategory[]> {
+    try {
+      const categoriesRef = collection(this.firestore, `provinces/${this.province}/commodities/${commodityId}/categories`);
+      const categoriesSnap = await getDocs(categoriesRef);
+      
+      const categories: ProductCategory[] = [];
+      
+      for (const categoryDoc of categoriesSnap.docs) {
+        const categoryData = categoryDoc.data();
+        const categoryId = categoryDoc.id;
+        
+        // Load products for this category
+        const products = await this.loadProducts(commodityId, categoryId);
+        
+        categories.push({
+          id: categoryId,
+          name: categoryData['name'] || categoryId,
+          products: products
+        });
+      }
+      
+      return categories;
+    } catch (error) {
+      console.error(`Error loading categories for commodity ${commodityId}:`, error);
+      return [];
+    }
+  }
+
+  // Load products for a category
+  async loadProducts(commodityId: string, categoryId: string): Promise<Product[]> {
+    try {
+      const productsRef = collection(this.firestore, `provinces/${this.province}/commodities/${commodityId}/categories/${categoryId}/products`);
+      const productsSnap = await getDocs(productsRef);
+      
+      const products: Product[] = [];
+      
+      productsSnap.forEach((productDoc) => {
+        const productData = productDoc.data();
+        products.push({
+          id: productDoc.id,
+          name: productData['name'] || productDoc.id,
+          prices: {}
+        });
+      });
+      
+      return products;
+    } catch (error) {
+      console.error(`Error loading products for ${commodityId}/${categoryId}:`, error);
+      return [];
+    }
+  }
+
   async submitFileInfo() {
     if (!this.fileName.trim()) {
       this.showToast('Please enter a file name', 'warning');
@@ -185,36 +296,60 @@ export class AddNuevaPage implements OnInit {
       return;
     }
 
-    // Load template for selected commodity
     this.loadCommodityTemplate();
     this.currentStep = 2;
   }
 
   loadCommodityTemplate() {
-    if (this.commodity === 'others') {
-      // Create empty template for custom commodity
-      this.categories = [
-        {
-          id: 'custom-category',
-          name: 'Products',
-          products: [
-            { id: 'product-1', name: 'Product 1', prices: {} }
-          ]
-        }
-      ];
+    const selectedCommodity = this.commodities.find(c => c.id === this.commodity);
+    
+    if (selectedCommodity) {
+      this.categories = JSON.parse(JSON.stringify(selectedCommodity.categories));
     } else {
-      // Load predefined template
-      this.categories = JSON.parse(JSON.stringify(this.commodityTemplates[this.commodity]));
+      this.categories = [];
     }
   }
 
-  // Add new store column
-  addStore() {
-    const storeNumber = this.stores.length + 1;
-    this.stores.push(`Store ${storeNumber}`);
+  async addStore() {
+    const alert = await this.alertController.create({
+      header: 'Add Store',
+      inputs: [
+        {
+          name: 'storeName',
+          type: 'text',
+          placeholder: 'Enter store name',
+          value: `Store ${this.stores.length + 1}`
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Add',
+          handler: async (data) => {
+            if (data.storeName && data.storeName.trim()) {
+              const newStore = data.storeName.trim();
+              const storeId = newStore.toLowerCase().replace(/\s+/g, '-');
+              
+              this.stores.push(newStore);
+              
+              // Save to stores subcollection
+              const storeRef = doc(this.firestore, `provinces/${this.province}/stores/${storeId}`);
+              await setDoc(storeRef, { name: newStore });
+              
+              this.showToast('Store added', 'success');
+              return true;
+            } else {
+              this.showToast('Please enter a store name', 'warning');
+              return false;
+            }
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 
-  // Remove store column
   async removeStore(index: number) {
     if (this.stores.length <= 1) {
       this.showToast('You must have at least one store', 'warning');
@@ -229,13 +364,15 @@ export class AddNuevaPage implements OnInit {
         {
           text: 'Remove',
           role: 'destructive',
-          handler: () => {
+          handler: async () => {
+            const removedStore = this.stores[index];
+            
             this.stores.splice(index, 1);
+            
             // Remove prices for this store from all products
             this.categories.forEach(cat => {
               cat.products.forEach(prod => {
                 delete prod.prices[index];
-                // Reindex remaining prices
                 const newPrices: { [key: number]: number | null } = {};
                 Object.keys(prod.prices).forEach(key => {
                   const numKey = parseInt(key);
@@ -248,6 +385,9 @@ export class AddNuevaPage implements OnInit {
                 prod.prices = newPrices;
               });
             });
+            
+            this.showToast('Store removed from current session', 'success');
+            // Note: Not deleting from Firestore to preserve data
           }
         }
       ]
@@ -256,7 +396,6 @@ export class AddNuevaPage implements OnInit {
     await alert.present();
   }
 
-  // Add new product to category
   async addProduct(categoryIndex: number) {
     const alert = await this.alertController.create({
       header: 'Add Product',
@@ -271,14 +410,30 @@ export class AddNuevaPage implements OnInit {
         { text: 'Cancel', role: 'cancel' },
         {
           text: 'Add',
-          handler: (data) => {
+          handler: async (data) => {
             if (data.productName && data.productName.trim()) {
-              const productId = `product-${Date.now()}`;
-              this.categories[categoryIndex].products.push({
+              const productId = data.productName.trim().toLowerCase().replace(/\s+/g, '-');
+              const newProduct = {
                 id: productId,
                 name: data.productName.trim(),
                 prices: {}
-              });
+              };
+              
+              this.categories[categoryIndex].products.push(newProduct);
+              
+              // Save to Firestore
+              const category = this.categories[categoryIndex];
+              const productRef = doc(
+                this.firestore, 
+                `provinces/${this.province}/commodities/${this.commodity}/categories/${category.id}/products/${productId}`
+              );
+              await setDoc(productRef, { name: data.productName.trim() });
+              
+              this.showToast('Product added', 'success');
+              return true;
+            } else {
+              this.showToast('Please enter a product name', 'warning');
+              return false;
             }
           }
         }
@@ -288,7 +443,6 @@ export class AddNuevaPage implements OnInit {
     await alert.present();
   }
 
-  // Remove product from category
   async removeProduct(categoryIndex: number, productIndex: number) {
     const category = this.categories[categoryIndex];
     const product = category.products[productIndex];
@@ -303,6 +457,7 @@ export class AddNuevaPage implements OnInit {
           role: 'destructive',
           handler: () => {
             category.products.splice(productIndex, 1);
+            this.showToast('Product removed', 'success');
           }
         }
       ]
@@ -311,7 +466,6 @@ export class AddNuevaPage implements OnInit {
     await alert.present();
   }
 
-  // Add new category
   async addCategory() {
     const alert = await this.alertController.create({
       header: 'Add Category',
@@ -320,23 +474,57 @@ export class AddNuevaPage implements OnInit {
           name: 'categoryName',
           type: 'text',
           placeholder: 'Enter category name'
+        },
+        {
+          name: 'productName',
+          type: 'text',
+          placeholder: 'Enter first product name'
         }
       ],
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
           text: 'Add',
-          handler: (data) => {
-            if (data.categoryName && data.categoryName.trim()) {
-              const categoryId = `category-${Date.now()}`;
-              this.categories.push({
-                id: categoryId,
-                name: data.categoryName.trim(),
-                products: [
-                  { id: `product-${Date.now()}`, name: 'Product 1', prices: {} }
-                ]
-              });
+          handler: async (data) => {
+            if (!data.categoryName || !data.categoryName.trim()) {
+              this.showToast('Please enter a category name', 'warning');
+              return false;
             }
+            
+            if (!data.productName || !data.productName.trim()) {
+              this.showToast('Please enter a product name', 'warning');
+              return false;
+            }
+            
+            const categoryId = data.categoryName.trim().toLowerCase().replace(/\s+/g, '-');
+            const productId = data.productName.trim().toLowerCase().replace(/\s+/g, '-');
+            
+            const newCategory = {
+              id: categoryId,
+              name: data.categoryName.trim(),
+              products: [
+                { id: productId, name: data.productName.trim(), prices: {} }
+              ]
+            };
+            
+            this.categories.push(newCategory);
+            
+            // Save category to Firestore
+            const categoryRef = doc(
+              this.firestore, 
+              `provinces/${this.province}/commodities/${this.commodity}/categories/${categoryId}`
+            );
+            await setDoc(categoryRef, { name: data.categoryName.trim() });
+            
+            // Save first product
+            const productRef = doc(
+              this.firestore, 
+              `provinces/${this.province}/commodities/${this.commodity}/categories/${categoryId}/products/${productId}`
+            );
+            await setDoc(productRef, { name: data.productName.trim() });
+            
+            this.showToast('Category added', 'success');
+            return true;
           }
         }
       ]
@@ -345,18 +533,15 @@ export class AddNuevaPage implements OnInit {
     await alert.present();
   }
 
-  // Update price
   updatePrice(product: Product, storeIndex: number, event: any) {
     const value = event.target.value;
     product.prices[storeIndex] = value ? parseFloat(value) : null;
   }
 
-  // Go back to step 1
   backToFileInfo() {
     this.currentStep = 1;
   }
 
-  // Validate that at least some prices are filled
   validatePrices(): boolean {
     let hasAtLeastOnePrice = false;
     
@@ -374,18 +559,13 @@ export class AddNuevaPage implements OnInit {
     return hasAtLeastOnePrice;
   }
 
-  // Submit the entire form
   async submitForm() {
-    // Validate that at least some prices are entered
     if (!this.validatePrices()) {
       this.showToast('Please enter at least one price before saving', 'warning');
       return;
     }
 
-    // Check if user is still authenticated before saving
     const currentUser = this.auth.currentUser;
-    console.log('Current user before save:', currentUser);
-    console.log('LocalStorage userId:', localStorage.getItem('userId'));
     
     if (!currentUser) {
       this.showToast('Session expired. Please log in again.', 'warning');
@@ -399,7 +579,6 @@ export class AddNuevaPage implements OnInit {
     await loading.present();
 
     try {
-      // Use Firebase Auth user data instead of localStorage
       const userId = currentUser.uid;
       const userEmail = currentUser.email || '';
 
@@ -414,12 +593,11 @@ export class AddNuevaPage implements OnInit {
         uploadedBy: userId,
         uploadedByEmail: userEmail,
         uploadedAt: Timestamp.now(),
-        province: 'nueva_vizcaya',
+        province: this.province,
         lastModified: Timestamp.now()
       };
 
-      // Save to Firestore - same path as nueva.page.ts reads from
-      const filesRef = collection(this.firestore, 'provinces/nueva_vizcaya/files');
+      const filesRef = collection(this.firestore, `provinces/${this.province}/files`);
       const docRef = await addDoc(filesRef, fileData);
 
       console.log('File saved successfully, document ID:', docRef.id);
@@ -427,13 +605,7 @@ export class AddNuevaPage implements OnInit {
       await loading.dismiss();
       this.showToast('File saved successfully!', 'success');
       
-      console.log('About to navigate to /nueva-vizcaya');
-      
-      // Navigate to Nueva Vizcaya page
-      // Use navigateByUrl for a clean navigation
       await this.router.navigateByUrl('/nueva-vizcaya', { replaceUrl: true });
-      
-      console.log('Navigation completed');
     } catch (error) {
       await loading.dismiss();
       console.error('Error saving file:', error);
@@ -441,14 +613,9 @@ export class AddNuevaPage implements OnInit {
     }
   }
 
-  // Get display name for commodity
   getCommodityDisplayName(commodity: string): string {
-    const displayNames: { [key: string]: string } = {
-      'bnpc': 'BNPC (Basic Necessities and Prime Commodities)',
-      'construction_materials': 'Construction Materials',
-      'flour': 'Flour'
-    };
-    return displayNames[commodity] || commodity;
+    const selectedCommodity = this.commodities.find(c => c.id === commodity);
+    return selectedCommodity ? selectedCommodity.displayName : commodity;
   }
 
   async showToast(message: string, color: string) {

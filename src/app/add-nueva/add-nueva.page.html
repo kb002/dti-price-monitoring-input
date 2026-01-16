@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/nueva"></ion-back-button>
+      <ion-back-button defaultHref="/nueva-vizcaya"></ion-back-button>
     </ion-buttons>
     <ion-title>Add New File - Nueva Vizcaya</ion-title>
   </ion-toolbar>
@@ -26,17 +26,18 @@
           </ion-input>
         </ion-item>
 
-        <!-- Commodity Selection -->
+        <!-- Commodity Selection - NOW DYNAMIC FROM DATABASE -->
         <ion-item>
           <ion-label position="stacked">Commodity *</ion-label>
           <ion-select 
             [(ngModel)]="commodity" 
             placeholder="Select commodity"
             interface="popover">
-            <ion-select-option value="bnpc">BNPC (Basic Necessities and Prime Commodities)</ion-select-option>
-            <ion-select-option value="construction_materials">Construction Materials</ion-select-option>
-            <ion-select-option value="flour">Flour</ion-select-option>
-            <ion-select-option value="others">Others</ion-select-option>
+            <ion-select-option 
+              *ngFor="let commodityItem of commodities" 
+              [value]="commodityItem.id">
+              {{ commodityItem.displayName }}
+            </ion-select-option>
           </ion-select>
         </ion-item>
 
@@ -92,7 +93,7 @@
       </ion-button>
       
       <div class="file-info-chip">
-        <strong>{{ fileName }}</strong> - {{ commodity === 'others' ? customCommodity : commodity }} - {{ month }} {{ week }}
+        <strong>{{ fileName }}</strong> - {{ commodity === 'others' ? customCommodity : getCommodityDisplayName(commodity) }} - {{ month }} {{ week }}
       </div>
     </div>
 
