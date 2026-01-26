@@ -1,120 +1,79 @@
 <ion-header>
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/nueva-vizcaya"></ion-back-button>
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
     </ion-buttons>
-    <ion-title>Add New File - Nueva Vizcaya</ion-title>
+    <ion-title>Edit File - {{ provinceName.replace('_', ' ') | titlecase }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <!-- Step 1: File Information -->
-  <div *ngIf="currentStep === 1" class="step-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading file data...</p>
+  </div>
+
+  <!-- Main Edit Form -->
+  <div *ngIf="!loading" class="edit-container">
+    
+    <!-- File Information Card -->
     <ion-card>
       <ion-card-header>
         <ion-card-title>File Information</ion-card-title>
       </ion-card-header>
       
       <ion-card-content>
-        <!-- File Name -->
-        <ion-item>
-          <ion-label position="stacked">File Name *</ion-label>
-          <ion-input 
-            [(ngModel)]="fileName" 
-            (ionInput)="onFileNameChange()"
-            placeholder="Enter file name"
-            type="text">
-          </ion-input>
-        </ion-item>
-        
-        <!-- File Name Status Messages -->
-        <div class="file-name-status">
-          <div *ngIf="isCheckingFileName" class="status-checking">
-            <ion-icon name="hourglass-outline"></ion-icon>
-            <span>Checking filename availability...</span>
-          </div>
-          <div *ngIf="fileNameExists && !isCheckingFileName" class="status-exists">
-            <ion-icon name="warning-outline"></ion-icon>
-            <span>This file name already exists and will be overwritten if you proceed</span>
-          </div>
-          <div *ngIf="!fileNameExists && !isCheckingFileName && fileName.trim()" class="status-available">
-            <ion-icon name="checkmark-circle-outline"></ion-icon>
-            <span>✓ File name available</span>
-          </div>
+        <div class="file-info-grid">
+          <!-- File Name -->
+          <ion-item>
+            <ion-label position="stacked">File Name *</ion-label>
+            <ion-input 
+              [(ngModel)]="fileName"
+              (ionInput)="markAsModified()"
+              placeholder="Enter file name"
+              type="text">
+            </ion-input>
+          </ion-item>
+
+          <!-- Commodity (Read-Only) -->
+          <ion-item>
+            <ion-label position="stacked">Commodity</ion-label>
+            <ion-input 
+              [value]="commodityDisplayName" 
+              readonly="true"
+              type="text">
+            </ion-input>
+          </ion-item>
+
+          <!-- Month Selection -->
+          <ion-item>
+            <ion-label position="stacked">Month *</ion-label>
+            <ion-select 
+              [(ngModel)]="month"
+              (ionChange)="markAsModified()"
+              placeholder="Select month"
+              interface="popover">
+              <ion-select-option *ngFor="let m of months" [value]="m">{{ m }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <!-- Week Selection -->
+          <ion-item *ngIf="showWeekDropdown">
+            <ion-label position="stacked">Week *</ion-label>
+            <ion-select 
+              [(ngModel)]="week"
+              (ionChange)="markAsModified()"
+              placeholder="Select week"
+              interface="popover">
+              <ion-select-option *ngFor="let w of weeks" [value]="w">{{ w }}</ion-select-option>
+            </ion-select>
+          </ion-item>
         </div>
-
-        <!-- Commodity Selection -->
-        <ion-item>
-          <ion-label position="stacked">Commodity *</ion-label>
-          <ion-select 
-            [(ngModel)]="commodity" 
-            (ionChange)="onCommodityChange()"
-            placeholder="Select commodity"
-            interface="popover">
-            <ion-select-option 
-              *ngFor="let commodityItem of commodities" 
-              [value]="commodityItem.id">
-              {{ commodityItem.name }}
-            </ion-select-option>
-            <ion-select-option value="others">Others</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <!-- Custom Commodity Name (if Others selected) -->
-        <ion-item *ngIf="isCustomCommodity">
-          <ion-label position="stacked">Commodity Name *</ion-label>
-          <ion-input 
-            [(ngModel)]="customCommodity" 
-            placeholder="Enter commodity name"
-            type="text">
-          </ion-input>
-        </ion-item>
-
-        <!-- Month Selection -->
-        <ion-item>
-          <ion-label position="stacked">Month *</ion-label>
-          <ion-select 
-            [(ngModel)]="month" 
-            placeholder="Select month"
-            interface="popover">
-            <ion-select-option *ngFor="let m of months" [value]="m">{{ m }}</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <!-- Week Selection (only shown for provinces other than nueva_vizcaya and quirino) -->
-        <ion-item *ngIf="showWeekDropdown">
-          <ion-label position="stacked">Week *</ion-label>
-          <ion-select 
-            [(ngModel)]="week" 
-            placeholder="Select week"
-            interface="popover">
-            <ion-select-option *ngFor="let w of weeks" [value]="w">{{ w }}</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-button 
-          expand="block" 
-          (click)="submitFileInfo()"
-          class="submit-btn">
-          Next: Fill Price Data
-          <ion-icon slot="end" name="arrow-forward"></ion-icon>
-        </ion-button>
       </ion-card-content>
     </ion-card>
-  </div>
-
-  <!-- Step 2: Price Data Entry -->
-  <div *ngIf="currentStep === 2" class="step-container">
-    <div class="step-header">
-      <ion-button fill="outline" (click)="backToFileInfo()">
-        <ion-icon slot="start" name="arrow-back"></ion-icon>
-        Back to File Info
-      </ion-button>
-      
-      <div class="file-info-chip">
-        <strong>{{ fileName }}</strong> - {{ commodity === 'others' ? customCommodity : getCommodityDisplayName(commodity) }} - {{ month }}<span *ngIf="showWeekDropdown"> {{ week }}</span>
-      </div>
-    </div>
 
     <!-- Store Management -->
     <ion-card>
@@ -191,7 +150,7 @@
               <ng-container *ngFor="let category of filteredCategories; let catIndex = index">
                 <!-- Category Header Row -->
                 <tr class="category-row">
-                  <td class="category-header" colspan="2">
+                  <td class="category-header" [attr.colspan]="2">
                     <strong>{{ category.name }}</strong>
                   </td>
                   <td [attr.colspan]="stores.length + 1" class="category-action">
@@ -207,19 +166,15 @@
                   <!-- Product name -->
                   <td class="product-name">{{ product.name }}</td>
                   
-                  <!-- Unit -->
+                  <!-- Unit column -->
                   <td class="unit-cell">
                     <ion-input
-                      *ngIf="!product.unit || product.unit.trim() === ''"
                       type="text"
-                      [value]="product.unit || ''"
+                      [value]="product.unit"
                       (ionInput)="updateUnit(product, $event)"
-                      placeholder="e.g., kg, pc"
+                      placeholder="Enter unit"
                       class="unit-input">
                     </ion-input>
-                    <span *ngIf="product.unit && product.unit.trim() !== ''" class="unit-display">
-                      {{ product.unit }}
-                    </span>
                   </td>
                   
                   <!-- Price inputs for each store -->
@@ -233,7 +188,7 @@
                     </ion-input>
                   </td>
 
-                  <!-- Prevailing Price (calculated automatically) -->
+                  <!-- Prevailing Price -->
                   <td class="prevailing-cell">
                     <div class="prevailing-price">
                       {{ product.prevailingPrice !== null && product.prevailingPrice !== undefined ? (product.prevailingPrice | number:'1.2-2') : '—' }}
@@ -268,7 +223,7 @@
       (click)="submitForm()"
       class="submit-final-btn">
       <ion-icon slot="start" name="save-outline"></ion-icon>
-      Save File
+      Update File
     </ion-button>
   </div>
 </ion-content>

@@ -7,6 +7,27 @@ ion-toolbar {
   --color: white;
 }
 
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+
+  ion-spinner {
+    width: 48px;
+    height: 48px;
+    color: #252261;
+  }
+
+  p {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+  }
+}
+
 .step-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -116,83 +137,6 @@ ion-item {
   }
 }
 
-// File Name Status Messages
-.file-name-status {
-  margin: -8px 0 16px 0;
-  min-height: 32px;
-
-  > div {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    animation: slideIn 0.3s ease-out;
-
-    ion-icon {
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    span {
-      flex: 1;
-      line-height: 1.4;
-    }
-  }
-
-  .status-checking {
-    background: #e3f2fd;
-    color: #1565c0;
-    border: 1px solid #bbdefb;
-
-    ion-icon {
-      color: #1976d2;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-  }
-
-  .status-exists {
-    background: #fff3e0;
-    color: #e65100;
-    border: 1px solid #ffe0b2;
-
-    ion-icon {
-      color: #f57c00;
-    }
-  }
-
-  .status-available {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
-
-    ion-icon {
-      color: #43a047;
-    }
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
 .submit-btn {
   margin-top: 24px;
   --background: #252261;
@@ -200,7 +144,6 @@ ion-item {
   font-weight: 600;
 }
 
-// Stores Management
 .stores-list {
   display: flex;
   flex-wrap: wrap;
@@ -219,7 +162,6 @@ ion-item {
   }
 }
 
-// Price Table - Modified for category rows with single Add Product button
 .price-table-card {
   overflow: visible;
 }
@@ -259,11 +201,11 @@ ion-item {
       top: 0;
 
       &.product-column {
-        min-width: 200px;
+        min-width: 180px;
       }
 
       &.unit-column {
-        min-width: 100px;
+        min-width: 120px;
         text-align: center;
       }
 
@@ -362,7 +304,6 @@ ion-item {
           &.unit-cell {
             text-align: center;
             padding: 6px;
-            background: #f5f5f5;
 
             .unit-input {
               --padding-start: 8px;
@@ -370,24 +311,15 @@ ion-item {
               border: 1px solid #ddd;
               border-radius: 4px;
               text-align: center;
-              font-size: 13px;
+              font-size: 14px;
               height: 36px;
               width: 100%;
-              min-width: 70px;
-              font-weight: 500;
+              min-width: 80px;
 
               &:focus-within {
                 border-color: #252261;
                 box-shadow: 0 0 0 2px rgba(37, 34, 97, 0.1);
               }
-            }
-
-            .unit-display {
-              display: inline-block;
-              padding: 8px 12px;
-              color: #333;
-              font-weight: 600;
-              font-size: 13px;
             }
           }
 
@@ -527,11 +459,11 @@ ion-item {
       font-size: 12px;
 
       &.product-column {
-        min-width: 150px;
+        min-width: 140px;
       }
 
       &.unit-column {
-        min-width: 80px;
+        min-width: 100px;
       }
 
       &.store-column {
@@ -582,9 +514,9 @@ ion-item {
           padding: 4px;
           
           .unit-input {
-            font-size: 12px;
+            font-size: 13px;
             height: 32px;
-            min-width: 60px;
+            min-width: 70px;
           }
         }
 
@@ -607,18 +539,6 @@ ion-item {
             min-width: 60px;
           }
         }
-      }
-    }
-  }
-
-  // File name status adjustments for mobile
-  .file-name-status {
-    > div {
-      padding: 6px 10px;
-      font-size: 12px;
-
-      ion-icon {
-        font-size: 16px;
       }
     }
   }
@@ -667,7 +587,7 @@ ion-item {
       font-size: 11px;
 
       &.unit-column {
-        min-width: 70px;
+        min-width: 80px;
       }
 
       &.prevailing-column {
@@ -706,9 +626,9 @@ ion-item {
       tr.product-row td {
         &.unit-cell {
           .unit-input {
-            font-size: 11px;
+            font-size: 12px;
             height: 28px;
-            min-width: 50px;
+            min-width: 60px;
           }
         }
 
@@ -719,21 +639,6 @@ ion-item {
             min-width: 50px;
           }
         }
-      }
-    }
-  }
-
-  // File name status adjustments for small mobile
-  .file-name-status {
-    margin: -8px 0 12px 0;
-    
-    > div {
-      padding: 6px 8px;
-      font-size: 11px;
-      gap: 6px;
-
-      ion-icon {
-        font-size: 14px;
       }
     }
   }

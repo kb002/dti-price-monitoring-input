@@ -1,40 +1,77 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>Quirino Dashboard</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content class="ion-padding">
-  <div class="welcome-section">
-    <h1>Welcome to Quirino</h1>
-    <p class="user-info">
-      <ion-icon name="person-circle-outline"></ion-icon>
-      {{ userEmail }}
-    </p>
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="user-info">
+      <h1>Quirino</h1>
+      <p class="email">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        {{ userEmail }}
+      </p>
+    </div>
+    <ion-button color="danger" (click)="confirmLogout()">
+      <ion-icon slot="start" name="log-out-outline"></ion-icon>
+      Logout
+    </ion-button>
   </div>
 
+  <!-- Files Card -->
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Province Information</ion-card-title>
+      <div class="card-header-flex">
+        <ion-card-title>Files</ion-card-title>
+        <ion-button (click)="generateNewFile()">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Generate New File
+        </ion-button>
+      </div>
     </ion-card-header>
+    
     <ion-card-content>
-      <p><strong>Province:</strong> {{ provinceName }}</p>
-      <p><strong>Region:</strong> Region II - Cagayan Valley</p>
-      <p><strong>Status:</strong> Active</p>
+      <!-- Table View -->
+      <div *ngIf="!loading && files.length > 0" class="files-table">
+        <!-- Table Header -->
+        <div class="table-header">
+          <div class="column-name">Name</div>
+          <div class="column-owner">Owner</div>
+          <div class="column-date">Date Created</div>
+          <div class="column-actions"></div>
+        </div>
+
+        <!-- Table Body -->
+        <div class="table-body">
+          <div *ngFor="let file of files" class="table-row">
+            <div class="column-name">
+              <ion-icon name="document-text-outline" class="file-icon"></ion-icon>
+              <span class="file-name">{{ file.fileName }}</span>
+            </div>
+            <div class="column-owner">
+              <ion-icon name="person-outline"></ion-icon>
+              <span>{{ file.uploadedByEmail }}</span>
+            </div>
+            <div class="column-date">
+              <ion-icon name="calendar-outline"></ion-icon>
+              <span>{{ formatDate(file.uploadedAt) }}</span>
+            </div>
+            <div class="column-actions">
+              <ion-icon 
+                name="ellipsis-vertical" 
+                class="options-icon"
+                (click)="openFileOptions(file)">
+              </ion-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!loading && files.length === 0" class="empty-state">
+        <ion-icon name="folder-open-outline"></ion-icon>
+        <p>No files yet</p>
+      </div>
+
+      <div *ngIf="loading" class="loading-state">
+        <ion-icon name="hourglass-outline"></ion-icon>
+        <p>Loading files...</p>
+      </div>
     </ion-card-content>
   </ion-card>
-
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Quick Actions</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <p>This is your Quirino-specific dashboard. You can add province-specific features here.</p>
-    </ion-card-content>
-  </ion-card>
-
-  <ion-button expand="block" color="danger" (click)="confirmLogout()">
-    <ion-icon slot="start" name="log-out-outline"></ion-icon>
-    Logout
-  </ion-button>
 </ion-content>

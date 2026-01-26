@@ -1,0 +1,212 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/nueva-vizcaya"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ fileData?.fileName || 'View File' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading file...</p>
+  </div>
+
+  <!-- Error -->
+  <ion-card *ngIf="error">
+    <ion-card-content class="error-text">
+      {{ error }}
+    </ion-card-content>
+  </ion-card>
+
+  <!-- File Content -->
+  <div *ngIf="!loading && fileData" class="step-container">
+
+    <!-- File Details -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>File Information</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content class="info-grid">
+
+        <!-- File Name -->
+        <div class="file-name-field">
+          <strong>File Name:</strong> {{ fileData.fileName }}
+        </div>
+
+        <div><strong>Commodity:</strong> {{ fileData.commodityDisplay }}</div>
+        <div><strong>Month:</strong> {{ fileData.month }}</div>
+        <div *ngIf="fileData.week"><strong>Week:</strong> {{ fileData.week }}</div>
+        <div><strong>Uploaded By:</strong> {{ fileData.uploadedByEmail }}</div>
+        <div><strong>Uploaded At:</strong> {{ formatDate(fileData.uploadedAt) }}</div>
+        <div><strong>Last Modified:</strong> {{ formatDate(fileData.lastModified) }}</div>
+
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Comparison Toggle -->
+    <ion-card class="comparison-toggle-card">
+      <ion-card-content>
+        <div class="toggle-container">
+          <div class="toggle-info">
+            <div class="icon-wrapper">
+              <!-- <ion-icon name="analytics-outline"></ion-icon> -->
+            </div>
+            <div>
+              <h3>Price Comparison</h3>
+              <p>Show historical price comparison and trends</p>
+            </div>
+          </div>
+          <ion-toggle 
+            [checked]="showComparison" 
+            (ionChange)="onToggleChange($event)"
+            [disabled]="loadingComparison"
+            color="warning">
+          </ion-toggle>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loadingComparison" class="loading-comparison">
+          <ion-spinner name="dots"></ion-spinner>
+          <span>Loading comparison data...</span>
+        </div>
+
+        <!-- Baseline Missing Warning -->
+        <div *ngIf="showComparison && needsBaseline && !baselineExists" class="baseline-warning">
+          <div class="warning-content">
+            <ion-icon name="warning-outline" class="warning-icon"></ion-icon>
+            <div class="warning-text">
+              <strong>Year-over-year comparison requires 2025 baseline data</strong>
+              <p>Please setup baseline prices for October-December 2025 to enable comparison with previous year.</p>
+            </div>
+          </div>
+          <ion-button 
+            expand="block" 
+            color="warning" 
+            (click)="navigateToBaselineSetup()"
+            class="setup-button">
+            <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+            Setup 2025 Baseline Data
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Price Table -->
+    <ion-card class="price-table-card">
+      <ion-card-header>
+        <ion-card-title>Price Data</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="price-table">
+
+            <thead>
+              <tr>
+                <th class="product-column">Product Name</th>
+                <th class="unit-column">Unit</th>
+                <th *ngFor="let store of fileData.stores" class="store-column">
+                  {{ store }}
+                </th>
+                <th class="prevailing-column">{{ getPrevailingPriceLabel() }}</th>
+
+                <!-- Comparison Columns -->
+                <ng-container *ngIf="showComparison">
+                  <!-- Week Ago (only for Isabela & Cagayan) -->
+                  <ng-container *ngIf="needsWeekComparison()">
+                    <th class="comparison-column">Prevailing Price<br>1 Week Ago</th>
+                    <th class="difference-column" colspan="2">Price Difference<br>(Peso | Percent)</th>
+                  </ng-container>
+
+                  <!-- 1 Month Ago -->
+                  <th class="comparison-column">Prevailing Price<br>1 Month Ago</th>
+                  <th class="difference-column" colspan="2">Price Difference<br>(Peso | Percent)</th>
+
+                  <!-- 3 Months Ago -->
+                  <th class="comparison-column">Prevailing Price<br>3 Months Ago</th>
+                  <th class="difference-column" colspan="2">Price Difference<br>(Peso | Percent)</th>
+                </ng-container>
+              </tr>
+            </thead>
+
+            <tbody>
+              <ng-container *ngFor="let category of fileData.categories">
+
+                <tr class="category-row">
+                  <td class="category-header">
+                    <strong>{{ category.name }}</strong>
+                  </td>
+                  <td [attr.colspan]="showComparison ? (fileData.stores.length + 2 + (getComparisonColumnCount() * 3)) : (fileData.stores.length + 2)"></td>
+                </tr>
+
+                <tr *ngFor="let product of category.products" class="product-row">
+                  <td class="product-name">{{ product.name }}</td>
+                  <td class="unit-cell">{{ product.unit || '—' }}</td>
+
+                  <td *ngFor="let store of fileData.stores; let i = index" class="price-cell">
+                    {{ product.prices[i] !== null ? (product.prices[i] | number:'1.2-2') : '—' }}
+                  </td>
+
+                  <td class="prevailing-cell">
+                    <div class="prevailing-price">
+                      {{ product.prevailingPrice !== null ? (product.prevailingPrice | number:'1.2-2') : '—' }}
+                    </div>
+                  </td>
+
+                  <!-- Comparison Data -->
+                  <ng-container *ngIf="showComparison">
+                    <!-- Week Ago Comparison (Isabela & Cagayan only) -->
+                    <ng-container *ngIf="needsWeekComparison()">
+                      <td class="comparison-cell">
+                        {{ getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo) !== null 
+                           ? (getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo) | number:'1.2-2') 
+                           : '—' }}
+                      </td>
+                      <td class="difference-cell" 
+                          [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo)))"
+                          colspan="2">
+                        {{ formatDifference(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo))) }}
+                      </td>
+                    </ng-container>
+
+                    <!-- 1 Month Ago Comparison -->
+                    <td class="comparison-cell">
+                      {{ getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo) !== null 
+                         ? (getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo) | number:'1.2-2') 
+                         : '—' }}
+                    </td>
+                    <td class="difference-cell" 
+                        [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo)))"
+                        colspan="2">
+                      {{ formatDifference(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo))) }}
+                    </td>
+
+                    <!-- 3 Months Ago Comparison -->
+                    <td class="comparison-cell">
+                      {{ getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo) !== null 
+                         ? (getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo) | number:'1.2-2') 
+                         : '—' }}
+                    </td>
+                    <td class="difference-cell" 
+                        [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo)))"
+                        colspan="2">
+                      {{ formatDifference(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo))) }}
+                    </td>
+                  </ng-container>
+                </tr>
+
+              </ng-container>
+            </tbody>
+
+          </table>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+</ion-content>

@@ -1,13 +1,274 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>add-cagayan</ion-title>
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/cagayan"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Add New File - Cagayan</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">add-cagayan</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+  <!-- Step 1: File Information -->
+  <div *ngIf="currentStep === 1" class="step-container">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>File Information</ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <!-- File Name -->
+        <ion-item>
+          <ion-label position="stacked">File Name *</ion-label>
+          <ion-input 
+            [(ngModel)]="fileName" 
+            (ionInput)="onFileNameChange()"
+            placeholder="Enter file name"
+            type="text">
+          </ion-input>
+        </ion-item>
+        
+        <!-- File Name Status Messages -->
+        <div class="file-name-status">
+          <div *ngIf="isCheckingFileName" class="status-checking">
+            <ion-icon name="hourglass-outline"></ion-icon>
+            <span>Checking filename availability...</span>
+          </div>
+          <div *ngIf="fileNameExists && !isCheckingFileName" class="status-exists">
+            <ion-icon name="warning-outline"></ion-icon>
+            <span>This file name already exists and will be overwritten if you proceed</span>
+          </div>
+          <div *ngIf="!fileNameExists && !isCheckingFileName && fileName.trim()" class="status-available">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            <span>✓ File name available</span>
+          </div>
+        </div>
+
+        <!-- Commodity Selection -->
+        <ion-item>
+          <ion-label position="stacked">Commodity *</ion-label>
+          <ion-select 
+            [(ngModel)]="commodity" 
+            (ionChange)="onCommodityChange()"
+            placeholder="Select commodity"
+            interface="popover">
+            <ion-select-option 
+              *ngFor="let commodityItem of commodities" 
+              [value]="commodityItem.id">
+              {{ commodityItem.name }}
+            </ion-select-option>
+            <ion-select-option value="others">Others</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Custom Commodity Name (if Others selected) -->
+        <ion-item *ngIf="isCustomCommodity">
+          <ion-label position="stacked">Commodity Name *</ion-label>
+          <ion-input 
+            [(ngModel)]="customCommodity" 
+            placeholder="Enter commodity name"
+            type="text">
+          </ion-input>
+        </ion-item>
+
+        <!-- Month Selection -->
+        <ion-item>
+          <ion-label position="stacked">Month *</ion-label>
+          <ion-select 
+            [(ngModel)]="month" 
+            placeholder="Select month"
+            interface="popover">
+            <ion-select-option *ngFor="let m of months" [value]="m">{{ m }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Week Selection (only shown for provinces other than nueva_vizcaya and quirino) -->
+        <ion-item *ngIf="showWeekDropdown">
+          <ion-label position="stacked">Week *</ion-label>
+          <ion-select 
+            [(ngModel)]="week" 
+            placeholder="Select week"
+            interface="popover">
+            <ion-select-option *ngFor="let w of weeks" [value]="w">{{ w }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-button 
+          expand="block" 
+          (click)="submitFileInfo()"
+          class="submit-btn">
+          Next: Fill Price Data
+          <ion-icon slot="end" name="arrow-forward"></ion-icon>
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Step 2: Price Data Entry -->
+  <div *ngIf="currentStep === 2" class="step-container">
+    <div class="step-header">
+      <ion-button fill="outline" (click)="backToFileInfo()">
+        <ion-icon slot="start" name="arrow-back"></ion-icon>
+        Back to File Info
+      </ion-button>
+      
+      <div class="file-info-chip">
+        <strong>{{ fileName }}</strong> - {{ commodity === 'others' ? customCommodity : getCommodityDisplayName(commodity) }} - {{ month }}<span *ngIf="showWeekDropdown"> {{ week }}</span>
+      </div>
+    </div>
+
+    <!-- Store Management -->
+    <ion-card>
+      <ion-card-header>
+        <div class="card-header-flex">
+          <ion-card-title>Stores</ion-card-title>
+          <ion-button size="small" (click)="addStore()">
+            <ion-icon slot="start" name="add"></ion-icon>
+            Add Store
+          </ion-button>
+        </div>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <div class="stores-list">
+          <div *ngFor="let store of stores; let i = index" class="store-chip">
+            <span>{{ store }}</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Unified Price Table -->
+    <ion-card class="price-table-card">
+      <ion-card-header>
+        <div class="card-header-flex">
+          <ion-card-title>Price Data Entry</ion-card-title>
+          <div class="header-actions">
+            <ion-button size="small" (click)="addCategory()">
+              <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+              Add Category
+            </ion-button>
+
+            <div class="search-box">
+              <ion-icon name="search-outline" class="search-icon"></ion-icon>
+              <ion-input
+                [(ngModel)]="searchTerm"
+                (ionInput)="onSearch()"
+                placeholder="Search products or categories..."
+                type="text"
+                class="search-input">
+              </ion-input>
+              <ion-icon 
+                *ngIf="searchTerm" 
+                name="close-circle" 
+                class="clear-icon"
+                (click)="clearSearch()">
+              </ion-icon>
+            </div>
+          </div>
+        </div>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <div class="table-wrapper">
+          <table class="price-table">
+            <!-- Sticky Header -->
+            <thead>
+              <tr>
+                <th class="product-column">Product Name</th>
+                <th class="unit-column">Unit</th>
+                <th *ngFor="let store of stores; let storeIndex = index" class="store-column">
+                  {{ store }}
+                </th>
+                <th class="prevailing-column">
+                  Prevailing Price<br>
+                  <span class="period-label">(for {{ month }}<span *ngIf="showWeekDropdown && week"> - {{ week }}</span>)</span>
+                </th>
+              </tr>
+            </thead>
+            
+            <!-- Table Body with Categories -->
+            <tbody>
+              <ng-container *ngFor="let category of filteredCategories; let catIndex = index">
+                <!-- Category Header Row -->
+                <tr class="category-row">
+                  <td class="category-header" colspan="2">
+                    <strong>{{ category.name }}</strong>
+                  </td>
+                  <td [attr.colspan]="stores.length + 1" class="category-action">
+                    <ion-button size="small" fill="outline" (click)="addProduct(getOriginalCategoryIndex(category.id))">
+                      <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+                      Add Product
+                    </ion-button>
+                  </td>
+                </tr>
+                
+                <!-- Category Products -->
+                <tr *ngFor="let product of category.products; let prodIndex = index" class="product-row">
+                  <!-- Product name -->
+                  <td class="product-name">{{ product.name }}</td>
+                  
+                  <!-- Unit -->
+                  <td class="unit-cell">
+                    <ion-input
+                      *ngIf="!product.unit || product.unit.trim() === ''"
+                      type="text"
+                      [value]="product.unit || ''"
+                      (ionInput)="updateUnit(product, $event)"
+                      placeholder="e.g., kg, pc"
+                      class="unit-input">
+                    </ion-input>
+                    <span *ngIf="product.unit && product.unit.trim() !== ''" class="unit-display">
+                      {{ product.unit }}
+                    </span>
+                  </td>
+                  
+                  <!-- Price inputs for each store -->
+                  <td *ngFor="let store of stores; let storeIndex = index" class="price-cell">
+                    <ion-input
+                      type="number"
+                      [value]="product.prices[storeIndex] || ''"
+                      (ionInput)="updatePrice(product, storeIndex, $event)"
+                      placeholder="0.00"
+                      class="price-input">
+                    </ion-input>
+                  </td>
+
+                  <!-- Prevailing Price (calculated automatically) -->
+                  <td class="prevailing-cell">
+                    <div class="prevailing-price">
+                      {{ product.prevailingPrice !== null && product.prevailingPrice !== undefined ? (product.prevailingPrice | number:'1.2-2') : '—' }}
+                    </div>
+                  </td>
+                </tr>
+              </ng-container>
+              
+              <!-- Empty state -->
+              <tr *ngIf="filteredCategories.length === 0 && categories.length === 0">
+                <td [attr.colspan]="stores.length + 3" class="empty-state">
+                  <p>No categories yet. Click "Add Category" to get started.</p>
+                </td>
+              </tr>
+              
+              <!-- No search results -->
+              <tr *ngIf="filteredCategories.length === 0 && categories.length > 0">
+                <td [attr.colspan]="stores.length + 3" class="empty-state">
+                  <p>No products or categories found matching "{{ searchTerm }}"</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Submit Button -->
+    <ion-button 
+      expand="block" 
+      color="success" 
+      (click)="submitForm()"
+      class="submit-final-btn">
+      <ion-icon slot="start" name="save-outline"></ion-icon>
+      Save File
+    </ion-button>
+  </div>
 </ion-content>

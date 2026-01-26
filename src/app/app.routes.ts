@@ -60,7 +60,20 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'view-file/:province/:fileId',
+    loadComponent: () => import('./view-file/view-file.page').then( m => m.ViewFilePage)
+  },
+  {
+    path: 'edit-file/:province/:fileId',
+    loadComponent: () => import('./edit-file/edit-file.page').then( m => m.EditFilePage)
+  },
+  {
+    path: 'baseline-input',
+    loadComponent: () => import('./baseline-input/baseline-input.page').then( m => m.BaselineInputPage)
+  },
+  {
     path: '**',
     redirectTo: 'login'
   },
+  
 ];

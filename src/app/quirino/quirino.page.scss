@@ -2,32 +2,45 @@ ion-content {
   --background: #f5f5f5;
 }
 
-.welcome-section {
-  text-align: center;
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
   padding: 20px;
   background: linear-gradient(135deg, #252261 0%, #3d3a8f 100%);
   border-radius: 12px;
   color: white;
-
-  h1 {
-    margin: 0 0 12px 0;
-    font-size: 28px;
-    font-weight: 700;
-  }
+  gap: 16px;
 
   .user-info {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 16px;
-    margin: 0;
-    opacity: 0.95;
+    flex: 1;
 
-    ion-icon {
-      font-size: 24px;
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 700;
     }
+
+    .email {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      margin: 0;
+      opacity: 0.95;
+
+      ion-icon {
+        font-size: 20px;
+      }
+    }
+  }
+
+  ion-button {
+    --border-radius: 8px;
+    height: 44px;
+    font-weight: 600;
+    margin: 0;
   }
 }
 
@@ -35,33 +48,267 @@ ion-card {
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-  ion-card-title {
-    color: #252261;
-    font-weight: 600;
-  }
+  .card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 
-  p {
-    margin: 8px 0;
-    color: #666;
-
-    strong {
+    ion-card-title {
       color: #252261;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    ion-button {
+      --background: #252261;
+      --border-radius: 8px;
+      height: 40px;
+      font-weight: 600;
+      margin: 0;
     }
   }
 }
 
-ion-button {
-  margin-top: 20px;
-  --border-radius: 8px;
-  height: 48px;
-  font-weight: 600;
+// Table Styling
+.files-table {
+  width: 100%;
+  
+  .table-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.5fr 60px;
+    gap: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #252261;
+    margin-bottom: 8px;
+    
+    > div {
+      display: flex;
+      align-items: center;
+      
+      &.column-actions {
+        justify-content: center;
+      }
+    }
+  }
+  
+  .table-body {
+    .table-row {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1.5fr 60px;
+      gap: 16px;
+      padding: 16px;
+      border-bottom: 1px solid #e9ecef;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: #f8f9fa;
+      }
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      > div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        
+        ion-icon {
+          font-size: 18px;
+          color: #666;
+          flex-shrink: 0;
+        }
+        
+        span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+      
+      .column-name {
+        .file-icon {
+          font-size: 20px;
+          color: #252261;
+        }
+        
+        .file-name {
+          font-weight: 600;
+          color: #252261;
+        }
+      }
+      
+      .column-owner {
+        color: #555;
+      }
+      
+      .column-date {
+        color: #888;
+      }
+      
+      .column-actions {
+        justify-content: center;
+        
+        .options-icon {
+          font-size: 24px;
+          color: #666;
+          cursor: pointer;
+          padding: 8px;
+          border-radius: 50%;
+          transition: all 0.2s;
+          
+          &:hover {
+            color: #252261;
+            background-color: #e9ecef;
+          }
+        }
+      }
+    }
+  }
 }
 
-ion-toolbar {
-  --background: #252261;
-  --color: white;
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+
+  ion-icon {
+    font-size: 80px;
+    opacity: 0.3;
+    margin-bottom: 16px;
+  }
+
+  p {
+    font-size: 18px;
+    margin: 0 0 20px 0;
+  }
+
+  ion-button {
+    --border-color: #252261;
+    --color: #252261;
+  }
 }
 
-ion-title {
-  font-weight: 600;
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+
+  ion-icon {
+    font-size: 60px;
+    opacity: 0.5;
+    margin-bottom: 16px;
+    animation: spin 2s linear infinite;
+  }
+
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Responsive adjustments
+@media (max-width: 992px) {
+  .files-table {
+    .table-header,
+    .table-body .table-row {
+      grid-template-columns: 2fr 1.2fr 1.2fr 60px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .user-info h1 {
+      font-size: 24px;
+    }
+
+    ion-button {
+      width: 100%;
+    }
+  }
+
+  .card-header-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+
+    ion-button {
+      width: 100%;
+    }
+  }
+  
+  .files-table {
+    overflow-x: auto;
+    
+    .table-header {
+      min-width: 600px;
+    }
+    
+    .table-body .table-row {
+      min-width: 600px;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .files-table {
+    .table-header {
+      display: none;
+    }
+    
+    .table-body .table-row {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      min-width: auto;
+      padding: 20px 16px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      
+      > div {
+        width: 100%;
+        
+        &.column-name {
+          font-size: 16px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        
+        &.column-owner::before {
+          content: "Owner: ";
+          font-weight: 600;
+          color: #252261;
+          margin-right: 4px;
+        }
+        
+        &.column-date::before {
+          content: "Created: ";
+          font-weight: 600;
+          color: #252261;
+          margin-right: 4px;
+        }
+        
+        &.column-actions {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: auto;
+        }
+      }
+    }
+  }
 }

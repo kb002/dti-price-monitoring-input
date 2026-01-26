@@ -1,0 +1,172 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="getBackRoute()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Setup 2025 Baseline Data</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="container">
+
+    <!-- Header Info Card -->
+    <ion-card class="info-card">
+      <ion-card-content>
+        <div class="info-header">
+          <div>
+            <h2>Year-over-Year Baseline Setup</h2>
+            <p>Enter prevailing prices for October-December 2025 to enable price comparison for January-March 2026 files.</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Province Display -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Province</ion-card-subtitle>
+        <ion-card-title>{{ provinceDisplay }}</ion-card-title>
+      </ion-card-header>
+    </ion-card>
+
+    <!-- Commodity Display -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Commodity</ion-card-subtitle>
+        <ion-card-title>{{ selectedCommodity }}</ion-card-title>
+      </ion-card-header>
+    </ion-card>
+
+    <div *ngIf="loadingTemplate" class="loading-section">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading template...</p>
+    </div>
+
+    <!-- Baseline Data Entry Form -->
+    <div *ngIf="selectedCommodity && templateLoaded && !loadingTemplate">
+      
+      <!-- Instructions -->
+      <ion-card class="instructions-card">
+        <ion-card-content>
+          <div class="instruction-text">
+            <strong>Instructions:</strong>
+            <p *ngIf="!needsWeekly">Enter the prevailing price for each product for October, November, and December 2025.</p>
+            <p *ngIf="needsWeekly">Enter the prevailing price for each product for all weeks in October, November, and December 2025.</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Data Entry Table -->
+      <ion-card class="data-entry-card">
+        <ion-card-header>
+          <ion-card-title>{{ selectedCommodity }} - 2025 Baseline Prices</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+          <div class="table-wrapper">
+            <table class="baseline-table">
+              <thead>
+                <tr>
+                  <th class="product-column">Product Name</th>
+                  <th class="unit-column">Unit</th>
+                  
+                  <!-- Monthly columns (Nueva & Quirino) -->
+                  <ng-container *ngIf="!needsWeekly">
+                    <th class="month-column">October 2025</th>
+                    <th class="month-column">November 2025</th>
+                    <th class="month-column">December 2025</th>
+                  </ng-container>
+
+                  <!-- Weekly columns (Isabela & Cagayan) -->
+                  <ng-container *ngIf="needsWeekly">
+                    <th class="week-column" *ngFor="let header of weeklyHeaders" [attr.colspan]="header.weeks.length">
+                      {{ header.month }}
+                    </th>
+                  </ng-container>
+                </tr>
+
+                <!-- Sub-header for weeks -->
+                <tr *ngIf="needsWeekly">
+                  <th></th>
+                  <th></th>
+                  <ng-container *ngFor="let header of weeklyHeaders">
+                    <th class="week-subheader" *ngFor="let week of header.weeks">{{ week }}</th>
+                  </ng-container>
+                </tr>
+              </thead>
+
+              <tbody>
+                <ng-container *ngFor="let category of templateCategories">
+                  <!-- Category Header -->
+                  <tr class="category-row">
+                    <td class="category-header" [attr.colspan]="getColumnSpan()">
+                      <strong>{{ category.name }}</strong>
+                    </td>
+                  </tr>
+
+                  <!-- Products -->
+                  <tr *ngFor="let product of category.products" class="product-row">
+                    <td class="product-name">{{ product.name }}</td>
+                    <td class="unit-cell">{{ product.unit || '—' }}</td>
+
+                    <!-- Monthly inputs (Nueva & Quirino) -->
+                    <ng-container *ngIf="!needsWeekly">
+                      <td class="input-cell" *ngFor="let month of ['October', 'November', 'December']">
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          min="0"
+                          [(ngModel)]="baselineData[product.id][month]"
+                          placeholder="0.00"
+                          class="price-input">
+                      </td>
+                    </ng-container>
+
+                    <!-- Weekly inputs (Isabela & Cagayan) -->
+                    <ng-container *ngIf="needsWeekly">
+                      <ng-container *ngFor="let header of weeklyHeaders">
+                        <td class="input-cell" *ngFor="let week of header.weeks">
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            min="0"
+                            [(ngModel)]="baselineData[product.id][header.month][week]"
+                            placeholder="0.00"
+                            class="price-input">
+                        </td>
+                      </ng-container>
+                    </ng-container>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <ion-button 
+              expand="block" 
+              color="medium" 
+              fill="outline"
+              (click)="clearAllData()">
+              <ion-icon slot="start" name="refresh-outline"></ion-icon>
+              Clear All
+            </ion-button>
+            
+            <ion-button 
+              expand="block" 
+              color="success"
+              (click)="saveBaselineData()"
+              [disabled]="saving">
+              <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+              <ion-icon *ngIf="!saving" slot="start" name="save-outline"></ion-icon>
+              {{ saving ? 'Saving...' : 'Save Baseline Data' }}
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+  </div>
+</ion-content>

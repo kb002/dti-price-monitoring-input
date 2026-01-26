@@ -1,0 +1,305 @@
+ion-content {
+  --background: #f5f5f5;
+}
+
+ion-toolbar {
+  --background: #252261;
+  --color: white;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+ion-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+
+  ion-card-title {
+    color: #252261;
+    font-weight: 600;
+  }
+
+  ion-card-subtitle {
+    color: #666;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* Info Card */
+.info-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  .info-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+
+    ion-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.95;
+      line-height: 1.5;
+    }
+  }
+}
+
+/* Instructions Card */
+.instructions-card {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+
+  ion-card-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+
+    .instruction-icon {
+      font-size: 24px;
+      color: #ff9800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .instruction-text {
+      flex: 1;
+
+      strong {
+        display: block;
+        color: #333;
+        margin-bottom: 6px;
+      }
+
+      p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+    }
+  }
+}
+
+/* Loading Section */
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #666;
+
+  ion-spinner {
+    margin-bottom: 12px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+/* Data Entry Card */
+.data-entry-card {
+  ion-card-content {
+    padding: 0;
+  }
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  padding: 16px;
+}
+
+.baseline-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 800px;
+
+  thead {
+    background: #252261;
+    color: white;
+
+    th {
+      padding: 14px 12px;
+      font-weight: 600;
+      border: 1px solid #3d3a8f;
+      text-align: center;
+      font-size: 13px;
+
+      &.product-column {
+        text-align: left;
+        min-width: 200px;
+      }
+
+      &.unit-column {
+        width: 100px;
+      }
+
+      &.month-column {
+        background: #1a7f64;
+        min-width: 140px;
+      }
+
+      &.week-column {
+        background: #4a5568;
+        min-width: 120px;
+      }
+
+      &.week-subheader {
+        background: #2d3748;
+        font-size: 12px;
+        min-width: 120px;
+      }
+    }
+  }
+
+  tbody {
+    tr.category-row {
+      background: #252261;
+
+      td.category-header {
+        padding: 14px 16px;
+        color: white;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+    }
+
+    tr.product-row {
+      &:nth-child(even) {
+        background: #f9f9f9;
+      }
+
+      td {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        text-align: center;
+
+        &.product-name {
+          text-align: left;
+          font-weight: 600;
+          padding-left: 24px;
+          color: #333;
+        }
+
+        &.unit-cell {
+          background: #f0f4ff;
+          font-weight: 500;
+          color: #252261;
+          font-style: italic;
+        }
+
+        &.input-cell {
+          padding: 4px;
+
+          .price-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s ease;
+
+            &:focus {
+              outline: none;
+              border-color: #667eea;
+              background: #f0f4ff;
+            }
+
+            &::placeholder {
+              color: #bbb;
+            }
+
+            /* Remove spinner arrows */
+            &::-webkit-outer-spin-button,
+            &::-webkit-inner-spin-button {
+              -webkit-appearance: none;
+              margin: 0;
+            }
+
+            &[type=number] {
+              -moz-appearance: textfield;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-top: 1px solid #e0e0e0;
+
+  ion-button {
+    margin: 0;
+    font-weight: 600;
+    text-transform: none;
+
+    ion-icon {
+      font-size: 20px;
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .info-header {
+    flex-direction: column;
+
+    ion-icon {
+      align-self: flex-start;
+    }
+  }
+
+  .action-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .baseline-table {
+    font-size: 12px;
+
+    thead th {
+      padding: 10px 8px;
+      font-size: 11px;
+
+      &.product-column {
+        min-width: 150px;
+      }
+    }
+
+    tbody td {
+      padding: 6px 8px;
+
+      &.input-cell .price-input {
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+    }
+  }
+}
