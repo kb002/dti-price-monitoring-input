@@ -81,13 +81,75 @@ export class LoginPage {
     }
 
     try {
+      console.log('🔐 Attempting login for:', trimmedEmail);
+      
       const userCredential = await signInWithEmailAndPassword(
         this.auth,
         trimmedEmail,
         trimmedPassword
       );
 
-      if (!userCredential.user.emailVerified) {
+      console.log('✅ Firebase auth successful, UID:', userCredential.user.uid);
+      console.log('📧 Email verified:', userCredential.user.emailVerified);
+
+      // Check if user is admin first
+      const adminRef = doc(this.firestore, `admin/${userCredential.user.uid}`);
+      console.log('Checking admin collection...');
+      const adminSnap = await getDoc(adminRef);
+      
+      let isAdmin = false;
+      let userProvince = '';
+      let userDoc: any = null;
+      let userRole = '';
+      let establishmentName = '';
+
+      if (adminSnap.exists()) {
+        // User is an admin
+        console.log('User found in admin collection!');
+        isAdmin = true;
+        userDoc = adminSnap.data();
+        userProvince = 'admin';
+        userRole = 'admin';
+        console.log('Admin data:', userDoc);
+      } else {
+        console.log('❌ Not in admin collection, checking provinces...');
+        // Province lookup for regular users
+        const provinces = ['cagayan', 'isabela', 'nueva_vizcaya', 'quirino', 'batanes'];
+
+        for (const province of provinces) {
+          const userRef = doc(
+            this.firestore,
+            `provinces/${province}/users/${userCredential.user.uid}`
+          );
+          const snap = await getDoc(userRef);
+          if (snap.exists()) {
+            userProvince = province;
+            userDoc = snap.data();
+            userRole = userDoc?.userRole || userDoc?.role || '';
+            establishmentName = userDoc?.establishmentName || '';
+            isAdmin = userDoc?.role === 'admin';
+            console.log(`User found in ${province}`);
+            console.log('User role:', userRole);
+            console.log('Establishment:', establishmentName);
+            break;
+          }
+        }
+
+        if (!userProvince) {
+          console.log('User not found in any province');
+          this.loading = false;
+          this.error = 'User information not found.';
+          await this.showToast('User not found', 'danger');
+          await this.auth.signOut();
+          return;
+        }
+      }
+
+      console.log('Final check - isAdmin:', isAdmin, 'emailVerified:', userCredential.user.emailVerified);
+
+      // Email verification check - skip for admins
+      if (!isAdmin && !userCredential.user.emailVerified) {
+        console.log('Non-admin user with unverified email, blocking login');
         this.loading = false;
         this.error = 'Please verify your email before logging in.';
         await this.showToast('Email not verified. Please check your inbox.', 'warning');
@@ -95,51 +157,79 @@ export class LoginPage {
         return;
       }
 
-      // Province lookup
-      const provinces = ['cagayan', 'isabela', 'nueva_vizcaya', 'quirino'];
-      let userProvince = '';
-      let userDoc: any = null;
-
-      for (const province of provinces) {
-        const userRef = doc(
-          this.firestore,
-          `provinces/${province}/users/${userCredential.user.uid}`
-        );
-        const snap = await getDoc(userRef);
-        if (snap.exists()) {
-          userProvince = province;
-          userDoc = snap.data();
-          break;
-        }
-      }
-
-      if (!userProvince) {
-        this.loading = false;
-        this.error = 'Province information not found.';
-        await this.showToast('Province not found', 'danger');
-        await this.auth.signOut();
-        return;
-      }
+      console.log('Verification check passed!');
 
       // Save login info
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('userEmail', trimmedEmail);
       localStorage.setItem('userProvince', userProvince);
       localStorage.setItem('userId', userCredential.user.uid);
+      localStorage.setItem('userRole', userRole);
+      
+      // Save establishment name if business owner
+      if (userRole === 'business_owner' && establishmentName) {
+        localStorage.setItem('establishmentName', establishmentName);
+      }
 
-      // Navigate
-      const routeMap: any = {
-        cagayan: '/cagayan',
-        isabela: '/isabela',
-        nueva_vizcaya: '/nueva-vizcaya',
-        quirino: '/quirino',
-      };
+      // Navigate based on role and province
+      let targetRoute = '';
+
+      if (userProvince === 'admin') {
+        targetRoute = '/admin';
+      } else {
+        // Route map for monitoring personnel
+        const monitoringRoutes: any = {
+          cagayan: '/cagayan',
+          isabela: '/isabela',
+          nueva_vizcaya: '/nueva',
+          quirino: '/quirino',
+          batanes: '/batanes',
+        };
+
+        // Route map for business owners
+        const businessRoutes: any = {
+          cagayan: '/cagayan-business',
+          isabela: '/isabela-business',
+          nueva_vizcaya: '/nueva-business',
+          quirino: '/quirino-business',
+          batanes: '/batanes-business',
+        };
+
+        if (userRole === 'business_owner') {
+          targetRoute = businessRoutes[userProvince];
+        } else if (userRole === 'price_monitoring') {
+          targetRoute = monitoringRoutes[userProvince];
+        } else {
+          // Fallback for old accounts without userRole
+          targetRoute = monitoringRoutes[userProvince];
+        }
+      }
 
       this.loading = false;
-      await this.router.navigate([routeMap[userProvince]]);
-      await this.showToast(`Welcome to ${this.formatProvinceName(userProvince)}!`, 'success');
+      console.log('Navigating to:', targetRoute);
+      
+      if (targetRoute) {
+        await this.router.navigate([targetRoute]);
+        
+        let welcomeMessage = '';
+        if (userProvince === 'admin') {
+          welcomeMessage = 'Welcome Admin!';
+        } else if (userRole === 'business_owner') {
+          welcomeMessage = `Welcome ${establishmentName}!`;
+        } else {
+          welcomeMessage = `Welcome to ${this.formatProvinceName(userProvince)}!`;
+        }
+        
+        await this.showToast(welcomeMessage, 'success');
+      } else {
+        console.error('No route found for province:', userProvince, 'role:', userRole);
+        this.error = 'Navigation error. Please contact support.';
+        await this.showToast('Navigation error', 'danger');
+        await this.auth.signOut();
+      }
 
     } catch (err: any) {
+      console.error('Login error:', err);
       this.loading = false;
 
       if (
@@ -155,10 +245,10 @@ export class LoginPage {
       } else {
         this.error = 'Login failed. Please try again.';
         await this.showToast('Login failed', 'danger');
+        console.error('Full error:', err);
       }
     }
   }
-
 
   private formatProvinceName(province: string): string {
     return province

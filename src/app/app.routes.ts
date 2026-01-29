@@ -30,7 +30,7 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'nueva-vizcaya',
+    path: 'nueva',  // ✅ FIXED: Changed from 'nueva-vizcaya' to 'nueva'
     loadComponent: () => import('./nueva/nueva.page').then(m => m.NuevaPage),
     canActivate: [authGuard]
   },
@@ -38,6 +38,40 @@ export const routes: Routes = [
     path: 'quirino',
     loadComponent: () => import('./quirino/quirino.page').then(m => m.QuirinoPage),
     canActivate: [authGuard]
+  },
+  {
+    path: 'batanes',
+    loadComponent: () => import('./batanes/batanes.page').then( m => m.BatanesPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'cagayan-business',
+    loadComponent: () => import('./cagayan-business/cagayan-business.page').then( m => m.CagayanBusinessPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'isabela-business',
+    loadComponent: () => import('./isabela-business/isabela-business.page').then( m => m.IsabelaBusinessPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'nueva-business',
+    loadComponent: () => import('./nueva-business/nueva-business.page').then( m => m.NuevaBusinessPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'quirino-business',
+    loadComponent: () => import('./quirino-business/quirino-business.page').then( m => m.QuirinoBusinessPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'batanes-business',  // ✅ ADDED: This was missing!
+    loadComponent: () => import('./batanes-business/batanes-business.page').then( m => m.BatanesBusinessPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'admin',
+    loadComponent: () => import('./admin/admin/admin.page').then( m => m.AdminPage)
   },
   {
     path: 'add-nueva',
@@ -57,6 +91,11 @@ export const routes: Routes = [
   {
     path: 'add-quirino',
     loadComponent: () => import('./add-quirino/add-quirino.page').then( m => m.AddQuirinoPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'add-batanes',
+    loadComponent: () => import('./add-batanes/add-batanes.page').then( m => m.AddBatanesPage),
     canActivate: [authGuard]
   },
   {

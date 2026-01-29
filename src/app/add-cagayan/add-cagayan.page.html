@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/cagayan"></ion-back-button>
     </ion-buttons>
@@ -70,6 +70,30 @@
           </ion-input>
         </ion-item>
 
+        <!-- Custom Commodity Category (if Others selected) -->
+        <ion-item *ngIf="isCustomCommodity">
+          <ion-label position="stacked">Store Category *</ion-label>
+          <ion-select 
+            [(ngModel)]="customCommodityCategory" 
+            placeholder="Select store category"
+            interface="popover">
+            <ion-select-option value="BNPC">BNPC</ion-select-option>
+            <ion-select-option value="CONSTRUCTION MATERIALS">Construction Materials</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Loading indicator for stores -->
+        <div *ngIf="loadingStores" class="loading-stores">
+          <ion-spinner name="dots"></ion-spinner>
+          <span>Loading stores for {{ commodity === 'others' ? customCommodity : getCommodityDisplayName(commodity) }}...</span>
+        </div>
+
+        <!-- Show store count if loaded -->
+        <div *ngIf="!loadingStores && stores.length > 0 && commodity" class="stores-info">
+          <ion-icon name="checkmark-circle" color="success"></ion-icon>
+          <span>{{ stores.length }} store(s) loaded</span>
+        </div>
+
         <!-- Month Selection -->
         <ion-item>
           <ion-label position="stacked">Month *</ion-label>
@@ -95,6 +119,7 @@
         <ion-button 
           expand="block" 
           (click)="submitFileInfo()"
+          [disabled]="loadingStores"
           class="submit-btn">
           Next: Fill Price Data
           <ion-icon slot="end" name="arrow-forward"></ion-icon>
@@ -120,7 +145,7 @@
     <ion-card>
       <ion-card-header>
         <div class="card-header-flex">
-          <ion-card-title>Stores</ion-card-title>
+          <ion-card-title>Stores ({{ storeCategory }})</ion-card-title>
           <ion-button size="small" (click)="addStore()">
             <ion-icon slot="start" name="add"></ion-icon>
             Add Store
@@ -134,6 +159,9 @@
             <span>{{ store }}</span>
           </div>
         </div>
+        <p *ngIf="stores.length === 0" class="no-stores-message">
+          No stores found for this category. Click "Add Store" to add one.
+        </p>
       </ion-card-content>
     </ion-card>
 
