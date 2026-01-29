@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/nueva-vizcaya"></ion-back-button>
     </ion-buttons>
@@ -65,7 +65,7 @@
             [checked]="showComparison" 
             (ionChange)="onToggleChange($event)"
             [disabled]="loadingComparison"
-            color="warning">
+            >
           </ion-toggle>
         </div>
 
@@ -78,28 +78,242 @@
         <!-- Baseline Missing Warning -->
         <div *ngIf="showComparison && needsBaseline && !baselineExists" class="baseline-warning">
           <div class="warning-content">
-            <ion-icon name="warning-outline" class="warning-icon"></ion-icon>
             <div class="warning-text">
               <strong>Year-over-year comparison requires 2025 baseline data</strong>
               <p>Please setup baseline prices for October-December 2025 to enable comparison with previous year.</p>
             </div>
           </div>
           <ion-button 
-            expand="block" 
-            color="warning" 
+            expand="block"  
             (click)="navigateToBaselineSetup()"
             class="setup-button">
             <ion-icon slot="start" name="add-circle-outline"></ion-icon>
             Setup 2025 Baseline Data
           </ion-button>
         </div>
+
+        <!-- Summary Report Button - Only show when comparison is enabled -->
+        <div *ngIf="showComparison && !loadingComparison && (!needsBaseline || baselineExists)" class="summary-button-container">
+          <ion-button 
+            expand="block" 
+            (click)="toggleSummaryReport()"
+            [disabled]="generatingSummary"
+            class="summary-button">
+            <ion-icon slot="start" [name]="showSummary ? 'eye-off-outline' : 'document-text-outline'"></ion-icon>
+            {{ showSummary ? 'Hide Summary Report' : 'Generate Summary Report' }}
+          </ion-button>
+        </div>
       </ion-card-content>
     </ion-card>
 
+    <!-- Summary Report Section -->
+    <div *ngIf="showSummary" class="summary-view-container">
+      <ion-card class="summary-header-card">
+        <ion-card-header>
+          <div class="summary-header-content">
+            <ion-card-title>Price Comparison Summary Report</ion-card-title>
+            <ion-button 
+              (click)="exportSummaryReport()" 
+              size="small" 
+              fill="solid" 
+              class="export-summary-btn">
+              <ion-icon slot="start" name="download-outline"></ion-icon>
+              Export Summary
+            </ion-button>
+          </div>
+        </ion-card-header>
+      </ion-card>
+
+      <div class="summary-content">
+
+        <!-- 1 Month Summary Card -->
+        <div class="summary-card">
+          <h3 class="summary-title">1 Month Comparison Summary</h3>
+
+          <!-- A. Increase -->
+          <div class="summary-section">
+            <span class="summary-label"><strong>A. Increase</strong></span>
+            <span class="summary-value"></span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Total Increase:</span>
+            <span class="summary-value">{{ summary.month1.increaseCount }}</span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Highest Increase:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month1.highestIncrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month1.highestIncrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Lowest Increase:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month1.lowestIncrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month1.lowestIncrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <!-- B. Decrease -->
+          <div class="bar"><br></div>
+          <div class="summary-section">
+            <span class="summary-label"><strong>B. Decrease</strong></span>
+            <span class="summary-value"></span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Total Decrease:</span>
+            <span class="summary-value">{{ summary.month1.decreaseCount }}</span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Highest Decrease:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month1.highestDecrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month1.highestDecrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Lowest Decrease:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month1.lowestDecrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month1.lowestDecrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <!-- Total Number of Products -->
+          <div class="bar"><br></div>
+          <div class="summary-section total-products">
+            <span class="summary-label"><strong>Total Number of Products:</strong></span>
+            <span class="summary-value"><strong>{{ summary.month1.totalProducts }}</strong></span>
+          </div>
+        </div>
+
+        <!-- 3 Months Summary Card -->
+        <div class="summary-card">
+          <h3 class="summary-title">3 Months Comparison Summary</h3>
+
+          <!-- A. Increase -->
+          <div class="summary-section">
+            <span class="summary-label"><strong>A. Increase</strong></span>
+            <span class="summary-value"></span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Total Increase:</span>
+            <span class="summary-value">{{ summary.month3.increaseCount }}</span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Highest Increase:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month3.highestIncrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month3.highestIncrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Lowest Increase:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month3.lowestIncrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month3.lowestIncrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <!-- B. Decrease -->
+          <div class="bar"><br></div>
+          <div class="summary-section">
+            <span class="summary-label"><strong>B. Decrease</strong></span>
+            <span class="summary-value"></span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Total Decrease:</span>
+            <span class="summary-value">{{ summary.month3.decreaseCount }}</span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Highest Decrease:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month3.highestDecrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month3.highestDecrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <div class="summary-section">
+            <span class="summary-label">Lowest Decrease:</span>
+            <span class="summary-value">
+              <div *ngFor="let item of summary.month3.lowestDecrease" class="multi-item">
+                {{ item }}
+              </div>
+              <div *ngIf="summary.month3.lowestDecrease.length === 0" class="no-data">
+                No data
+              </div>
+            </span>
+          </div>
+
+          <!-- Total Number of Products -->
+          <div class="bar"><br></div>
+          <div class="summary-section total-products">
+            <span class="summary-label"><strong>Total Number of Products:</strong></span>
+            <span class="summary-value"><strong>{{ summary.month3.totalProducts }}</strong></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Price Table -->
-    <ion-card class="price-table-card">
+    <ion-card class="price-table-card" *ngIf="!showSummary">
       <ion-card-header>
-        <ion-card-title>Price Data</ion-card-title>
+        <div class="price-data-header">
+          <ion-card-title>Price Data</ion-card-title>
+          <div class="header-actions">
+            <ion-button (click)="exportToExcel()" [disabled]="loading || !fileData" size="small" fill="solid">
+              <ion-icon slot="start" name="download-outline"></ion-icon>
+              Export
+            </ion-button>
+            <ion-searchbar 
+              [(ngModel)]="searchText" 
+              (ionInput)="onSearchChange($event)"
+              placeholder="Search products"
+              animated
+              class="price-search">
+            </ion-searchbar>
+          </div>
+        </div>
       </ion-card-header>
 
       <ion-card-content>
@@ -135,7 +349,7 @@
             </thead>
 
             <tbody>
-              <ng-container *ngFor="let category of fileData.categories">
+              <ng-container *ngFor="let category of getFilteredCategories()">
 
                 <tr class="category-row">
                   <td class="category-header">
@@ -168,7 +382,7 @@
                            : '—' }}
                       </td>
                       <td class="difference-cell" 
-                          [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo)))"
+                          [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo)), product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo))"
                           colspan="2">
                         {{ formatDifference(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.weekAgo))) }}
                       </td>
@@ -181,7 +395,7 @@
                          : '—' }}
                     </td>
                     <td class="difference-cell" 
-                        [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo)))"
+                        [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo)), product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo))"
                         colspan="2">
                       {{ formatDifference(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.monthAgo))) }}
                     </td>
@@ -193,7 +407,7 @@
                          : '—' }}
                     </td>
                     <td class="difference-cell" 
-                        [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo)))"
+                        [ngClass]="getDifferenceClass(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo)), product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo))"
                         colspan="2">
                       {{ formatDifference(calculatePriceDifference(product.prevailingPrice, getPriceFromComparison(product.name, product.unit || '', category.name, comparisonData.threeMonthsAgo))) }}
                     </td>

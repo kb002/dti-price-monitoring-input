@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {FormsModule} from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonContent,
@@ -28,6 +29,7 @@ import * as XLSX from 'xlsx';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     IonContent,
     IonButton,
     IonCard,
@@ -46,6 +48,8 @@ export class CagayanPage implements OnInit {
   files: FileData[] = [];
   loading: boolean = true;
   provinceName: string = 'cagayan';
+  searchQuery: string = '';
+  filteredFiles: FileData[] = [];
 
   constructor(
     private router: Router,
@@ -74,6 +78,7 @@ export class CagayanPage implements OnInit {
     try {
       // Using DataService instead of direct Firestore calls
       this.files = await this.dataService.getFilesByProvince(this.provinceName);
+      this.filteredFiles = [...this.files];
       console.log('Files loaded:', this.files);
     } catch (error) {
       console.error('Error loading files:', error);
@@ -81,6 +86,39 @@ export class CagayanPage implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  onSearchChange() {
+    if (!this.searchQuery.trim()) {
+      this.filteredFiles = [...this.files];
+      return;
+    }
+
+    const query = this.searchQuery.toLowerCase().trim();
+    
+    this.filteredFiles = this.files.filter(file => {
+      // Search in file name
+      const fileNameMatch = file.fileName.toLowerCase().includes(query);
+      
+      // Search in owner email
+      const ownerMatch = file.uploadedByEmail?.toLowerCase().includes(query);
+      
+      // Search in commodity
+      const commodityMatch = file.commodityDisplay?.toLowerCase().includes(query);
+      
+      // Search in month
+      const monthMatch = file.month?.toLowerCase().includes(query);
+      
+      // Search in week
+      const weekMatch = file.week?.toLowerCase().includes(query);
+      
+      return fileNameMatch || ownerMatch || commodityMatch || monthMatch || weekMatch;
+    });
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    this.filteredFiles = [...this.files];
   }
 
   async confirmLogout() {
@@ -133,13 +171,6 @@ export class CagayanPage implements OnInit {
         icon: 'eye-outline',
         handler: () => {
           this.viewFile(file);
-        }
-      },
-      {
-        text: 'Export to Excel',
-        icon: 'download-outline',
-        handler: () => {
-          this.exportToExcel(file);
         }
       }
     ];
@@ -228,61 +259,6 @@ export class CagayanPage implements OnInit {
       await loading.dismiss();
       console.error('Error deleting file:', error);
       await this.showToast('Failed to delete file. Please try again.', 'danger');
-    }
-  }
-
-  async exportToExcel(file: FileData) {
-    const loading = await this.loadingController.create({
-      message: 'Generating Excel file...',
-    });
-    await loading.present();
-
-    try {
-      // Load comparison data
-      const comparisonData = await this.loadComparisonData(file);
-      
-      // Create workbook
-      const workbook = XLSX.utils.book_new();
-      
-      // Create main data sheet
-      const mainSheetData = this.generateMainSheetData(file, comparisonData);
-      const mainSheet = XLSX.utils.aoa_to_sheet(mainSheetData);
-      
-      // Set column widths
-      const colWidths = [
-        { wch: 30 }, // Product Name
-        { wch: 12 }, // Unit
-        ...file.stores.map(() => ({ wch: 15 })), // Store columns
-        { wch: 18 }, // Prevailing Price
-      ];
-      
-      // Add comparison column widths if data exists
-      if (comparisonData.weekAgo) {
-        colWidths.push({ wch: 18 }, { wch: 20 }); // 1 Week Ago + Difference
-      }
-      if (comparisonData.monthAgo) {
-        colWidths.push({ wch: 18 }, { wch: 20 }); // 1 Month Ago + Difference
-      }
-      if (comparisonData.threeMonthsAgo) {
-        colWidths.push({ wch: 18 }, { wch: 20 }); // 3 Months Ago + Difference
-      }
-      
-      mainSheet['!cols'] = colWidths;
-      
-      XLSX.utils.book_append_sheet(workbook, mainSheet, 'Price Data');
-      
-      // Generate file name
-      const fileName = `${file.fileName}_${file.month}${file.week ? '_' + file.week : ''}.xlsx`;
-      
-      // Write and download
-      XLSX.writeFile(workbook, fileName);
-      
-      await loading.dismiss();
-      await this.showToast('Excel file downloaded successfully', 'success');
-    } catch (error) {
-      await loading.dismiss();
-      console.error('Error exporting to Excel:', error);
-      await this.showToast('Failed to export file. Please try again.', 'danger');
     }
   }
 

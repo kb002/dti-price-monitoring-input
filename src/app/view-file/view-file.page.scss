@@ -61,7 +61,7 @@ ion-card {
 
 /* Comparison Toggle Card */
 .comparison-toggle-card {
-  background: linear-gradient(135deg, #26305d 0%, #1e1f6c 100%);
+  background: #252261;
   color: white;
 
   ion-card-content {
@@ -105,10 +105,10 @@ ion-card {
     }
 
     ion-toggle {
-      --background: rgba(255, 255, 255, 0.3);
-      --background-checked: #ffd700;
+      --background: #252261;
+      --background-checked: #C3C3C3;
       --handle-background: white;
-      --handle-background-checked: #252261;
+      --handle-background-checked: white;
       min-width: 50px;
     }
   }
@@ -139,16 +139,16 @@ ion-card {
       gap: 12px;
       margin-bottom: 16px;
       padding: 12px;
-      background: rgba(255, 193, 7, 0.2);
+      background: rgba(195, 195, 195, 0.5);
       border-radius: 8px;
-      border: 1px solid rgba(255, 193, 7, 0.4);
+      border: 1px solid #A0A0A0;
 
-      .warning-icon {
-        font-size: 24px;
-        color: #ffc107;
-        flex-shrink: 0;
-        margin-top: 2px;
-      }
+      // .warning-icon {
+      //   font-size: 24px;
+      //   color: #ffd700;
+      //   flex-shrink: 0;
+      //   margin-top: 2px;
+      // }
 
       .warning-text {
         flex: 1;
@@ -157,7 +157,6 @@ ion-card {
           display: block;
           font-size: 15px;
           margin-bottom: 6px;
-          color: #fff;
         }
 
         p {
@@ -170,9 +169,9 @@ ion-card {
     }
 
     .setup-button {
-      --background: #ffc107;
-      --background-hover: #ffb300;
-      --background-activated: #ffa000;
+      --background: #C3C3C3;
+      --background-hover: #c3c3c3bd;
+      --background-activated: #85848491;
       --color: #252261;
       font-weight: 600;
       text-transform: none;
@@ -180,6 +179,202 @@ ion-card {
 
       ion-icon {
         font-size: 20px;
+      }
+    }
+  }
+
+  /* Summary Button */
+  .summary-button-container {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+
+    .summary-button {
+      --background: #C3C3C3;
+      --background-hover: #c3c3c3bd;
+      --background-activated: #85848491;
+      --color: #252261;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0.3px;
+
+      ion-icon {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+/* Summary Report Styles */
+.summary-header-card {
+  background: #252261;
+  color: white;
+  margin-bottom: 20px;
+
+  .summary-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    ion-card-title {
+      color: white;
+      margin: 0;
+    }
+
+    .export-summary-btn {
+      --background: #C3C3C3;
+      --background-hover: #c3c3c3bd;
+      --background-activated: #85848491;
+      --color: #252261;
+      font-weight: 600;
+      text-transform: none;
+
+      ion-icon {
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+.summary-view-container {
+  margin-bottom: 2rem;
+}
+
+.summary-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 20px;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid #252261;
+
+  .summary-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #252261;
+    margin: 0 0 24px 0;
+    padding-bottom: 12px;
+    border-bottom: 3px solid #252261;
+    text-align: center;
+  }
+
+  .summary-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 8px 0;
+
+    .summary-label {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .summary-value {
+      text-align: right;
+      color: #555;
+      font-size: 14px;
+
+      .multi-item {
+        padding: 4px 0;
+        font-size: 13px;
+      }
+
+      .no-data {
+        color: #999;
+        font-style: italic;
+      }
+    }
+
+    &.total-products {
+      margin-top: 12px;
+      padding-top: 16px;
+      border-top: 2px solid #252261;
+      border-bottom: none;
+
+      .summary-label,
+      .summary-value {
+        font-size: 16px;
+        color: #252261;
+      }
+    }
+  }
+
+  .bar {
+    margin: 16px 0;
+    border-top: 2px solid #e0e0e0;
+  }
+}
+
+/* Price Data Header with Search and Export */
+.price-data-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 16px;
+  
+  ion-card-title {
+    margin: 0;
+    color: #252261;
+    font-weight: 600;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    @media (max-width: 768px) {
+      width: 100%;
+    }
+    
+    ion-button {
+      --padding-start: 0.8rem;
+      --padding-end: 0.8rem;
+      --border-radius: 6px;
+      height: 36px;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: none;
+      --background: #252261;
+      --color: white; 
+      --box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      
+      ion-icon {
+        font-size: 18px;
+        margin-right: 4px;
+      }
+    }
+    
+    .price-search {
+      max-width: 250px;
+      padding: 0;
+      --background: #f0f4ff;
+      --border-radius: 6px;
+      --box-shadow: 0 1px 3px rgba(37, 34, 97, 0.1);
+      --placeholder-color: #718096;
+      --placeholder-opacity: 0.8;
+      --height: 36px;
+      font-size: 14px;
+      
+      @media (max-width: 768px) {
+        max-width: 100%;
+        flex: 1;
       }
     }
   }
@@ -228,17 +423,20 @@ ion-card {
       }
 
       &.prevailing-column {
-        background: #1a7f64;
+        background: #c3c3c3;
+        color: #252261;
       }
 
       &.comparison-column {
-        background: #4a5568;
+        background: #c3c3c3;
+        color: #252261;
         text-align: center;
         min-width: 120px;
       }
 
       &.difference-column {
-        background: #2d3748;
+        background: #c3c3c3;
+        color: #252261;
         text-align: center;
         min-width: 150px;
       }
@@ -259,8 +457,13 @@ ion-card {
     }
 
     tr.product-row {
-      &:nth-child(even) {
-        background: #f9f9f9;
+      // &:nth-child(even) {
+      //   background: #f9f9f9;
+      // }
+
+      &:hover {
+        background: #eef0ff;
+        transition: background 0.2s ease;
       }
 
       td {
@@ -283,22 +486,21 @@ ion-card {
         }
 
         &.prevailing-cell {
-          background: #e8f5f2;
-          border-left: 3px solid #2a9d8f;
+          background: #dfdede;
 
           .prevailing-price {
             font-weight: 700;
-            color: #1a7f64;
-            background: white;
+            color: #252261;
+            // background: rgb(86, 86, 86);
             padding: 6px 12px;
             border-radius: 6px;
-            border: 2px solid #2a9d8f;
+            // border: 2px solid #838181;
             display: inline-block;
           }
         }
 
         &.comparison-cell {
-          background: #f7fafc;
+          // background: #f7fafc;
           font-weight: 600;
           color: #4a5568;
         }
@@ -308,13 +510,13 @@ ion-card {
           font-size: 13px;
 
           &.price-increase {
-            background: #fff5f5;
-            color:  #22543d;
+            background: rgba(86, 160, 86, 0.8);
+            color: white;
           }
 
           &.price-decrease {
-            background: #f0fff4;
-            color: #c53030;
+            background: rgba(178, 102, 102, 0.8);
+            color: white;
           }
 
           &.price-same {
@@ -350,6 +552,38 @@ ion-card {
         .warning-icon {
           align-self: flex-start;
         }
+      }
+    }
+  }
+
+  .summary-header-card {
+    .summary-header-content {
+      flex-direction: column;
+      align-items: stretch;
+
+      .export-summary-btn {
+        width: 100%;
+      }
+    }
+  }
+
+  .summary-content {
+    grid-template-columns: 1fr;
+  }
+
+  .price-table {
+    font-size: 12px;
+    
+    thead th {
+      padding: 10px 8px !important;
+      font-size: 11px;
+    }
+    
+    tbody td {
+      padding: 8px 6px !important;
+      
+      &.product-name {
+        padding-left: 12px !important;
       }
     }
   }

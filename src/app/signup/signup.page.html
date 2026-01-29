@@ -30,6 +30,7 @@
             [(ngModel)]="province" 
             placeholder="Select province"
             interface="alert"
+            (ionChange)="onProvinceChange()"
             [interfaceOptions]="{
               header: 'Select Province'
             }">
@@ -37,6 +38,76 @@
             <ion-select-option value="isabela">Isabela</ion-select-option>
             <ion-select-option value="nueva_vizcaya">Nueva Vizcaya</ion-select-option>
             <ion-select-option value="quirino">Quirino</ion-select-option>
+            <ion-select-option value="batanes">Batanes</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+      <!-- Role Selection -->
+      <div class="form-group">
+        <label>Role</label>
+        <ion-item lines="none" class="field">
+          <ion-select 
+            [(ngModel)]="userRole" 
+            placeholder="Select role"
+            interface="alert"
+            (ionChange)="onRoleChange()"
+            [interfaceOptions]="{
+              header: 'Select Role'
+            }">
+            <ion-select-option value="business_owner">Business Establishment Owner</ion-select-option>
+            <ion-select-option value="price_monitoring">Price Monitoring Personnel</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+      <!-- Establishment Name (Only for Business Owners) -->
+      <div class="form-group" *ngIf="userRole === 'business_owner'">
+        <label>Establishment Name</label>
+        <ion-item lines="none" class="field">
+          <ion-select 
+            [(ngModel)]="establishmentName" 
+            placeholder="Select establishment"
+            interface="alert"
+            (ionChange)="onEstablishmentChange()"
+            [interfaceOptions]="{
+              header: 'Select Establishment'
+            }">
+            <ion-select-option 
+              *ngFor="let establishment of availableEstablishments" 
+              [value]="establishment.name">
+              {{ establishment.name }}
+            </ion-select-option>
+            <ion-select-option value="others">Others</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+      <!-- Custom Establishment Name (Only when "Others" is selected) -->
+      <div class="form-group" *ngIf="userRole === 'business_owner' && establishmentName === 'others'">
+        <label>Enter Establishment Name</label>
+        <ion-item lines="none" class="field">
+          <ion-input
+            [(ngModel)]="customEstablishmentName"
+            type="text"
+            placeholder="Enter your establishment name">
+          </ion-input>
+        </ion-item>
+      </div>
+
+      <!-- Category Selection (Only when "Others" is selected) -->
+      <div class="form-group" *ngIf="userRole === 'business_owner' && establishmentName === 'others'">
+        <label>Store Category</label>
+        <ion-item lines="none" class="field">
+          <ion-select 
+            [(ngModel)]="storeCategory" 
+            placeholder="Select category"
+            interface="alert"
+            [interfaceOptions]="{
+              header: 'Select Category'
+            }">
+            <ion-select-option value="BNPC">BNPC</ion-select-option>
+            <ion-select-option value="Construction Materials">Construction Materials</ion-select-option>
           </ion-select>
         </ion-item>
       </div>

@@ -125,7 +125,7 @@ export class AddQuirinoPage implements OnInit {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+  weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
 
   constructor(
     private router: Router,
@@ -162,7 +162,7 @@ export class AddQuirinoPage implements OnInit {
         const userData = userDoc.data();
         const userProvince = userData['province'];
         
-        if (userProvince === 'nueva_vizcaya' || userProvince === 'quirino') {
+        if (userProvince === 'nueva_vizcaya' || userProvince === 'quirino' || userProvince === 'batanes') {
           this.showWeekDropdown = false;
           this.week = '';
         } else {
