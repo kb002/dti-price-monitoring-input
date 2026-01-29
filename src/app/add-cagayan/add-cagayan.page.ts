@@ -20,7 +20,6 @@ import {
   IonLabel,
   IonBackButton,
   IonButtons,
-  IonSpinner,
   AlertController,
   LoadingController,
   ToastController
@@ -57,7 +56,6 @@ interface CommodityTemplate {
   id: string;
   name: string;
   categories: ProductCategory[];
-  storeCategory?: string; // Maps to BNPC or CONSTRUCTION MATERIALS
 }
 
 @Component({
@@ -84,8 +82,7 @@ interface CommodityTemplate {
     IonItem,
     IonLabel,
     IonBackButton,
-    IonButtons,
-    IonSpinner
+    IonButtons
   ]
 })
 export class AddCagayanPage implements OnInit {
@@ -93,8 +90,6 @@ export class AddCagayanPage implements OnInit {
   fileName: string = '';
   commodity: string = '';
   customCommodity: string = '';
-  customCommodityCategory: string = '';
-  storeCategory: string = '';
   month: string = '';
   week: string = '';
 
@@ -125,12 +120,6 @@ export class AddCagayanPage implements OnInit {
   fileNameExists: boolean = false;
   isCheckingFileName: boolean = false;
 
-  // Store loading state
-  loadingStores: boolean = false;
-
-  // Store category ID for database operations
-  storeCategoryId: string = '';
-
   months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -150,7 +139,7 @@ export class AddCagayanPage implements OnInit {
   async ngOnInit() {
     this.checkAuthStatus();
     await this.checkUserProvince();
-    await this.loadCommodities();
+    await this.loadProvinceData();
   }
 
   checkAuthStatus() {
@@ -190,38 +179,68 @@ export class AddCagayanPage implements OnInit {
     }
   }
 
-  async loadCommodities() {
+  async loadProvinceData() {
     const loading = await this.loadingController.create({
-      message: 'Loading commodities...',
+      message: 'Loading data...',
     });
     await loading.present();
 
+    try {
+      // Load stores and commodities in parallel for faster loading
+      await Promise.all([
+        this.loadStores(),
+        this.loadCommodities()
+      ]);
+      
+      console.log('Loaded stores:', this.stores);
+      console.log('Loaded commodities:', this.commodities);
+      
+    } catch (error) {
+      console.error('Error loading province data:', error);
+      this.showToast('Error loading data: ' + error, 'danger');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  async loadStores() {
+    try {
+      const storesRef = collection(this.firestore, `provinces/${this.province}/stores`);
+      const storesSnap = await getDocs(storesRef);
+      
+      this.stores = [];
+      
+      storesSnap.forEach((storeDoc) => {
+        const storeData = storeDoc.data();
+        this.stores.push(storeData['name'] || storeDoc.id);
+      });
+      
+      if (this.stores.length === 0) {
+        console.warn('No stores found in database. Please add stores manually in Firestore.');
+        this.showToast('No stores found. Please add stores in Firestore.', 'warning');
+      }
+      
+      console.log('Stores loaded:', this.stores);
+    } catch (error) {
+      console.error('Error loading stores:', error);
+      throw error;
+    }
+  }
+
+  async loadCommodities() {
     try {
       const commoditiesRef = collection(this.firestore, `provinces/${this.province}/commodities`);
       const commoditiesSnap = await getDocs(commoditiesRef);
       
       this.commodities = [];
       
-      // Load commodity names and determine their store category
+      // Only load commodity names, not categories/products yet
       commoditiesSnap.forEach((commodityDoc) => {
         const commodityData = commodityDoc.data();
-        const commodityName = commodityData['name'] || commodityDoc.id;
-        
-        // Determine store category based on commodity name
-        let storeCategory = '';
-        const nameLower = commodityName.toLowerCase();
-        
-        if (nameLower.includes('construction') || nameLower.includes('material')) {
-          storeCategory = 'CONSTRUCTION MATERIALS';
-        } else {
-          storeCategory = 'BNPC';
-        }
-        
         this.commodities.push({
           id: commodityDoc.id,
-          name: commodityName,
-          categories: [], // Empty - will load when user selects this commodity
-          storeCategory: storeCategory
+          name: commodityData['name'] || commodityDoc.id,
+          categories: [] // Empty - will load when user selects this commodity
         });
       });
       
@@ -230,101 +249,10 @@ export class AddCagayanPage implements OnInit {
         this.showToast('No commodities found. Please add commodities in Firestore.', 'warning');
       }
       
-      console.log('Commodities loaded:', this.commodities);
+      console.log('Commodities loaded (names only):', this.commodities);
     } catch (error) {
       console.error('Error loading commodities:', error);
-      this.showToast('Error loading commodities: ' + error, 'danger');
-    } finally {
-      await loading.dismiss();
-    }
-  }
-
-  async onCommodityChange() {
-    this.isCustomCommodity = this.commodity === 'others';
-    
-    // Reset dependent fields
-    this.customCommodityCategory = '';
-    this.stores = [];
-    this.storeCategoryId = '';
-    this.storeCategory = '';
-    
-    if (this.isCustomCommodity) {
-      this.customCommodity = '';
-      this.customCategories = [];
-      this.customCommodityId = '';
-    } else {
-      // Load stores for the selected commodity
-      const selectedCommodity = this.commodities.find(c => c.id === this.commodity);
-      if (selectedCommodity && selectedCommodity.storeCategory) {
-        this.storeCategory = selectedCommodity.storeCategory;
-        await this.loadStoresByCategory(selectedCommodity.storeCategory);
-      }
-    }
-  }
-
-  async loadStoresByCategory(categoryName: string) {
-    this.loadingStores = true;
-    this.stores = [];
-
-    try {
-      console.log('Loading stores for category:', categoryName);
-      
-      // First, get all store category documents to find the one matching the category name
-      const storesRef = collection(this.firestore, `provinces/${this.province}/stores`);
-      const categoriesSnap = await getDocs(storesRef);
-      
-      let categoryId = '';
-      
-      // Find the category ID that matches the selected category name
-      for (const categoryDoc of categoriesSnap.docs) {
-        const categoryData = categoryDoc.data();
-        const docCategoryName = categoryData['name'] || categoryDoc.id;
-        
-        console.log('Checking category:', docCategoryName, 'against:', categoryName);
-        
-        if (docCategoryName.toUpperCase() === categoryName.toUpperCase()) {
-          categoryId = categoryDoc.id;
-          this.storeCategoryId = categoryId;
-          console.log('Found matching category ID:', categoryId);
-          break;
-        }
-      }
-      
-      if (!categoryId) {
-        console.log('No matching category found for:', categoryName);
-        this.showToast(`No store category found for ${categoryName}`, 'warning');
-        return;
-      }
-      
-      // Now load stores from the "store names" subcollection
-      const storeNamesRef = collection(
-        this.firestore, 
-        `provinces/${this.province}/stores/${categoryId}/store names`
-      );
-      const storeNamesSnap = await getDocs(storeNamesRef);
-      
-      console.log('Found stores:', storeNamesSnap.size);
-      
-      storeNamesSnap.forEach((storeDoc) => {
-        const storeName = storeDoc.id; // Document ID is the store name
-        this.stores.push(storeName);
-        console.log('Added store:', storeName);
-      });
-      
-      // Sort stores alphabetically
-      this.stores.sort((a, b) => a.localeCompare(b));
-      
-      if (this.stores.length === 0) {
-        this.showToast(`No stores found for ${categoryName}. You can add stores manually.`, 'info');
-      } else {
-        console.log('Total stores loaded:', this.stores.length);
-      }
-      
-    } catch (error) {
-      console.error('Error loading stores:', error);
-      this.showToast('Error loading stores: ' + error, 'danger');
-    } finally {
-      this.loadingStores = false;
+      throw error;
     }
   }
 
@@ -398,6 +326,15 @@ export class AddCagayanPage implements OnInit {
     }
   }
 
+  onCommodityChange() {
+    this.isCustomCommodity = this.commodity === 'others';
+    if (!this.isCustomCommodity) {
+      this.customCommodity = '';
+      this.customCategories = [];
+      this.customCommodityId = '';
+    }
+  }
+
   // Helper method to sanitize file name for use as document ID
   sanitizeFileName(fileName: string): string {
     return fileName.trim()
@@ -467,26 +404,6 @@ export class AddCagayanPage implements OnInit {
       return;
     }
 
-    // Validate custom commodity category if "others" is selected
-    if (this.commodity === 'others' && !this.customCommodityCategory) {
-      this.showToast('Please select a store category', 'warning');
-      return;
-    }
-
-    // For custom commodity, load stores based on selected category
-    if (this.commodity === 'others' && this.customCommodityCategory) {
-      this.storeCategory = this.customCommodityCategory;
-      await this.loadStoresByCategory(this.customCommodityCategory);
-    }
-
-    // Validate that stores have been loaded
-    if (this.stores.length === 0) {
-      const proceed = await this.confirmNoStores();
-      if (!proceed) {
-        return;
-      }
-    }
-
     // Validate month
     if (!this.month) {
       this.showToast('Please select a month', 'warning');
@@ -514,33 +431,10 @@ export class AddCagayanPage implements OnInit {
       await this.createCustomCommodity();
     }
 
-    // Load commodity template
+    // Load commodity template (this is where the delay happens)
     await this.loadCommodityTemplate();
     
     this.currentStep = 2;
-  }
-
-  // Helper method to confirm proceeding with no stores
-  async confirmNoStores(): Promise<boolean> {
-    return new Promise(async (resolve) => {
-      const alert = await this.alertController.create({
-        header: 'No Stores Found',
-        message: 'No stores are available for this commodity category. You can add stores manually in the next step. Do you want to continue?',
-        buttons: [
-          {
-            text: 'Go Back',
-            role: 'cancel',
-            handler: () => resolve(false)
-          },
-          {
-            text: 'Continue',
-            handler: () => resolve(true)
-          }
-        ]
-      });
-      
-      await alert.present();
-    });
   }
 
   // Helper method to confirm proceeding with existing file name
@@ -671,23 +565,14 @@ export class AddCagayanPage implements OnInit {
           handler: async (data) => {
             if (data.storeName && data.storeName.trim()) {
               const newStore = data.storeName.trim();
-              
-              // Check if we have a valid category ID
-              if (!this.storeCategoryId) {
-                this.showToast('Error: Store category not properly initialized', 'danger');
-                return false;
-              }
+              const storeId = newStore.toLowerCase().replace(/\s+/g, '-');
               
               this.stores.push(newStore);
               
-              // Save to the "store names" subcollection
-              const storeRef = doc(
-                this.firestore, 
-                `provinces/${this.province}/stores/${this.storeCategoryId}/store names/${newStore}`
-              );
+              const storeRef = doc(this.firestore, `provinces/${this.province}/stores/${storeId}`);
               await setDoc(storeRef, { 
-                createdAt: Timestamp.now(),
-                createdBy: this.auth.currentUser?.uid || 'unknown'
+                name: newStore,
+                createdAt: Timestamp.now()
               });
               
               this.showToast('Store added', 'success');
@@ -1069,8 +954,6 @@ export class AddCagayanPage implements OnInit {
         fileName: this.fileName.trim(),
         commodity: commodityIdToSave,
         commodityDisplay: commodityDisplayName,
-        storeCategory: this.storeCategory,
-        storeCategoryId: this.storeCategoryId,
         month: this.month,
         week: this.showWeekDropdown ? this.week : null,
         stores: this.stores,
