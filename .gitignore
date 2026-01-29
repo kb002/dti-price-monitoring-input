@@ -68,3 +68,10 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+src/scripts/serviceAccountKey.json
+*.json
+.env
+.env.*
+serviceAccountKey.json
+firebase-adminsdk.json
